@@ -1,0 +1,17 @@
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\bin\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.exe
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\bin\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.deps.json
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\bin\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.runtimeconfig.json
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\bin\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.dll
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\bin\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.pdb
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl_Processing.FileDownloader.Form1.resources
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.csproj.GenerateResource.cache
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.AssemblyInfoInputs.cache
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.AssemblyInfo.cs
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.csproj.CoreCompileInputs.cache
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.sourcelink.json
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.dll
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\refint\Parallerl-Processing.FileDownloader.dll
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.pdb
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\Parallerl-Processing.FileDownloader.genruntimeconfig.cache
+C:\Users\Bedo\Documents\GitHub\FileDownloader-Parallerl-Processing\Parallerl-Processing\Parallerl-Processing.FileDownloader\obj\Debug\net8.0-windows\ref\Parallerl-Processing.FileDownloader.dll
