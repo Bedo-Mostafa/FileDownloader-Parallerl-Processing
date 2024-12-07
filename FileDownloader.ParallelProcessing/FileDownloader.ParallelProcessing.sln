@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileDownloader.ParallelProcessing", "FileDownloader.ParallelProcessing.csproj", "{7531EF1F-92B2-4C6E-9B89-639CE48D2E9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YouTubeDownloaderConsoleAppSynchronous", "..\ConsoleApp\YouTubeDownloaderConsoleAppSynchronous.csproj", "{CAD8469C-F37A-42D1-9B6C-2257A320DA7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YouTubeDownloaderConsoleAppASynchronous", "..\YouTubeDownloaderConsoleAppASynchronous\YouTubeDownloaderConsoleAppASynchronous.csproj", "{35E6718C-4D7A-4556-9495-E09F2FD4CE3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7531EF1F-92B2-4C6E-9B89-639CE48D2E9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7531EF1F-92B2-4C6E-9B89-639CE48D2E9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7531EF1F-92B2-4C6E-9B89-639CE48D2E9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7531EF1F-92B2-4C6E-9B89-639CE48D2E9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAD8469C-F37A-42D1-9B6C-2257A320DA7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAD8469C-F37A-42D1-9B6C-2257A320DA7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAD8469C-F37A-42D1-9B6C-2257A320DA7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAD8469C-F37A-42D1-9B6C-2257A320DA7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35E6718C-4D7A-4556-9495-E09F2FD4CE3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35E6718C-4D7A-4556-9495-E09F2FD4CE3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35E6718C-4D7A-4556-9495-E09F2FD4CE3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35E6718C-4D7A-4556-9495-E09F2FD4CE3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
