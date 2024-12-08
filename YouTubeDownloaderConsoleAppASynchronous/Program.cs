@@ -1,9 +1,10 @@
-﻿//using System;
-//using System.IO;
-//using System.Linq;
-//using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using YoutubeExplode;
 using YoutubeExplode.Converter;
+using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
 namespace YouTubeDownloaderConsoleAppAsynchronous
@@ -30,15 +31,53 @@ namespace YouTubeDownloaderConsoleAppAsynchronous
                 return;
             }
 
-            // Start downloading concurrently, each in parallel on its own thread
-            var task1 = Task.Run(() => DownloadVideoAsync(url1, 1));
-            var task2 = Task.Run(() => DownloadVideoAsync(url2, 2));
-            var task3 = Task.Run(() => DownloadVideoAsync(url3, 3));
+            // Confirm details for each video before downloading
+            if (await ConfirmVideoDetails(url1, 1) &&
+                await ConfirmVideoDetails(url2, 2) &&
+                await ConfirmVideoDetails(url3, 3))
+            {
+                // Start downloading concurrently, each in parallel on its own thread
+                var task1 = Task.Run(() => DownloadVideoAsync(url1, 1));
+                var task2 = Task.Run(() => DownloadVideoAsync(url2, 2));
+                var task3 = Task.Run(() => DownloadVideoAsync(url3, 3));
 
-            // Wait for all downloads to finish
-            await Task.WhenAll(task1, task2, task3);
+                // Wait for all downloads to finish
+                await Task.WhenAll(task1, task2, task3);
 
-            Console.WriteLine("\nAll downloads are completed!");
+                Console.WriteLine("\nAll downloads are completed!");
+            }
+            else
+            {
+                Console.WriteLine("Download canceled.");
+            }
+        }
+
+        static async Task<bool> ConfirmVideoDetails(string videoUrl, int videoNumber)
+        {
+            try
+            {
+                var youtube = new YoutubeClient();
+
+                // Get the video details
+                var video = await youtube.Videos.GetAsync(videoUrl);
+
+                // Display details to the user
+                Console.WriteLine($"\nVideo {videoNumber} Details:");
+                Console.WriteLine($"Title: {video.Title}");
+                Console.WriteLine($"Author: {video.Author.ChannelTitle}");
+                Console.WriteLine($"Duration: {video.Duration?.ToString(@"hh\:mm\:ss") ?? "Unknown"}");
+
+                // Ask for confirmation
+                Console.Write($"Do you want to download Video {videoNumber}? (yes/no): ");
+                string? input = Console.ReadLine()?.ToLower();
+
+                return input == "yes";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching details for {videoUrl}: {ex.Message}");
+                return false;
+            }
         }
 
         static async Task DownloadVideoAsync(string videoUrl, int videoNumber)
@@ -59,37 +98,34 @@ namespace YouTubeDownloaderConsoleAppAsynchronous
                     .Where(s => s.Container == Container.Mp4)
                     .GetWithHighestBitrate();
 
-                // Select best video stream (1080p60 in this example)
+                // Select best video stream (highest quality)
                 var videoStreamInfo = streamManifest
                     .GetVideoStreams()
                     .Where(s => s.Container == Container.Mp4)
                     .OrderByDescending(s => s.VideoQuality.Label)
                     .FirstOrDefault();
 
-
                 // Set up output folder dynamically
-                string outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads\\You-tubeDownloader", "Videos");
+                string outputFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads\\YouTubeDownloader", "Videos");
                 // Ensure the output directory exists
                 Directory.CreateDirectory(outputFolder);
                 string outputFilePath = Path.Combine(outputFolder, $"{video.Title}.mp4");
-                int i = 0;
+
                 // Create a progress handler
                 var progress = new Progress<double>(percent =>
                 {
-                    //if (i == 0) { Console.WriteLine(); i--; }
-                    // Move the cursor back to the beginning of the line
-                    //Console.CursorLeft = 0;
-                    // Print the progress for the specific video
-                    Console.WriteLine($"Video {videoNumber} Download Progress: {percent:P0}   "); // Extra spaces to clear old text
+                    Console.WriteLine($"Video {videoNumber} Download Progress: {percent:P0}");
                 });
 
                 // Download and mux streams into a single file with progress reporting
                 var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
                 await youtube.Videos.DownloadAsync(streamInfos, new ConversionRequestBuilder(outputFilePath).Build(), progress);
+
+                Console.WriteLine($"Video {videoNumber} downloaded successfully to: {outputFilePath}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error downloading {videoUrl}: {ex.Message}");
+                Console.WriteLine($"Error downloading Video {videoNumber} ({videoUrl}): {ex.Message}");
             }
         }
     }
