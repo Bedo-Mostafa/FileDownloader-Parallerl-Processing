@@ -117,44 +117,6 @@ namespace File_Download
 {
     internal class Program
     {
-        static void DownloadFile(string url, string destination)
-        {
-            try
-            {
-                using (WebClient webClient = new WebClient())
-                {
-                    webClient.DownloadProgressChanged += (s, e) =>
-                    {
-                        Console.Write($"\rDownloading {Path.GetFileName(destination)}: {e.ProgressPercentage}%");
-                    };
-
-                    webClient.DownloadFileCompleted += (s, e) =>
-                    {
-                        Console.WriteLine($"\nCompleted: {Path.GetFileName(destination)}");
-                    };
-
-                    webClient.DownloadFileTaskAsync(new Uri(url), destination).Wait();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"\nFailed to download {url}: {ex.Message}");
-            }
-        }
-
-        static async Task DownloadFilesSequentiallyAsync(Queue<string> urls, string destinationFolder)
-        {
-            while (urls.Count > 0)
-            {
-                string url = urls.Dequeue();
-                string fileName = Path.GetFileName(new Uri(url).LocalPath);
-                string destination = Path.Combine(destinationFolder, fileName);
-
-                // Call the download method for the current file
-                await Task.Run(() => DownloadFile(url, destination));
-            }
-        }
-
         static async Task Main(string[] args)
         {
             Console.WriteLine("Welcome to the File Downloader!");
@@ -194,5 +156,44 @@ namespace File_Download
 
             Console.WriteLine("\nAll downloads completed!");
         }
+
+        static void DownloadFile(string url, string destination)
+        {
+            try
+            {
+                using (WebClient webClient = new WebClient())
+                {
+                    webClient.DownloadProgressChanged += (s, e) =>
+                    {
+                        Console.Write($"\rDownloading {Path.GetFileName(destination)}: {e.ProgressPercentage}%");
+                    };
+
+                    webClient.DownloadFileCompleted += (s, e) =>
+                    {
+                        Console.WriteLine($"\nCompleted: {Path.GetFileName(destination)}");
+                    };
+
+                    webClient.DownloadFileTaskAsync(new Uri(url), destination).Wait();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"\nFailed to download {url}: {ex.Message}");
+            }
+        }
+
+        static async Task DownloadFilesSequentiallyAsync(Queue<string> urls, string destinationFolder)
+        {
+            while (urls.Count > 0)
+            {
+                string url = urls.Dequeue();
+                string fileName = Path.GetFileName(new Uri(url).LocalPath);
+                string destination = Path.Combine(destinationFolder, fileName);
+
+                // Call the download method for the current file
+                await Task.Run(() => DownloadFile(url, destination));
+            }
+        }
+
     }
 }

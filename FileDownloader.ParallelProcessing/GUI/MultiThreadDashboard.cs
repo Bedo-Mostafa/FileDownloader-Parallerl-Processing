@@ -1,14 +1,5 @@
-﻿using FileDownloader.ParallelProcessing.Models;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
+﻿using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
+using FileDownloadSingelThread = FileDownloader.ParallelProcessing.Models.FileDownloadSingelThread;
 
 namespace FileDownloader.ParallelProcessing
 {
@@ -19,10 +10,9 @@ namespace FileDownloader.ParallelProcessing
             InitializeComponent();
         }
 
-        FileInfo information = new FileInfo()
-        {
-            FileName= "Hazem"
-        };
+        FileDownloadSingelThread fileDownloadSingleThread = new FileDownloadSingelThread();
+        FileInfo information = new FileInfo();
+
         private void button1_Click(object sender, EventArgs e)
         {
             CreateDownloadPanel(information);
@@ -40,17 +30,36 @@ namespace FileDownloader.ParallelProcessing
 
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private async void DownloadButtonSingleThread(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            string url = URLTextBox.Text.Trim();
+            string pathDownload = LocationInput.Text.Trim();
+            string fileName = fileDownloadSingleThread.GetInfo(url);
+            information.FileName = fileName;
 
+            // clear the inputs
+            //URLTextBox.Clear();
+            //LocationInput.Clear();
+
+            var downloadPanel = CreateDownloadPanel(information);
+            var progressBar = (downloadPanel.Controls["ProgressBar"] as ProgressBar);
+            var SpeedValue = (downloadPanel.Controls["SpeedValue"] as Label);
+
+            var progress = new Progress<(int Progress, long Speed)>(value =>
+            {
+                // Update the ProgressBar or Label with progress
+                progressBar.Value = value.Progress;
+                SpeedValue.Text = $"{value.Speed / 1024} KB/s";
+            });
+
+            await Task.Run(() => fileDownloadSingleThread.DownloadFilesSequentially(url, pathDownload, progress));
         }
 
 
 
-        private void button5_Click(object sender, EventArgs e)
+        private void DownlaodPathButton(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
         }
 
         private void label3_Click(object sender, EventArgs e)
@@ -98,12 +107,29 @@ namespace FileDownloader.ParallelProcessing
 
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
+        private void URLInputLabel(object sender, EventArgs e)
+        {
+            // Get the text from the TextBox
+            //string url = txtUrl.Text.Trim(); // Trim to remove leading/trailing whitespace
+            //string url = URLTextBox.Text.Trim();
+        }
+
+        private void Resume_Click(object sender, EventArgs e)
         {
 
         }
 
-        private void Resume_Click(object sender, EventArgs e)
+        private void MultiThreadDashboard_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void URLLabel_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DownloadPath_Text(object sender, EventArgs e)
         {
 
         }

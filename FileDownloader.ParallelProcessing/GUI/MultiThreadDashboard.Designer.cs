@@ -1,4 +1,4 @@
-﻿using FileDownloader.ParallelProcessing.Models;
+﻿//using FileDownloader.ParallelProcessing.Models;
 using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
 
 namespace FileDownloader.ParallelProcessing
@@ -33,6 +33,12 @@ namespace FileDownloader.ParallelProcessing
         {
             ApplicationContainer = new Panel();
             DownloadsContainer = new Panel();
+            LocationInput = new TextBox();
+            SetLocationButton = new Button();
+            DownloadButton = new Button();
+            InstructionLabel = new Label();
+            URLTextBox = new TextBox();
+            URLLabel = new Label();
             DownloadPanel = new Panel();
             Resume = new Button();
             Cancel = new Button();
@@ -44,15 +50,7 @@ namespace FileDownloader.ParallelProcessing
             ProgressBar = new ProgressBar();
             FileNameValue = new Label();
             FileNameLabel = new Label();
-            LocationInput = new TextBox();
-            SetLocationButton = new Button();
-            DownloadButton = new Button();
-            InstructionLabel = new Label();
-            URLTextBox = new TextBox();
-            URLLabel = new Label();
             ApplicationContainer.SuspendLayout();
-            DownloadsContainer.SuspendLayout();
-            DownloadPanel.SuspendLayout();
             SuspendLayout();
             // 
             // ApplicationContainer
@@ -72,10 +70,10 @@ namespace FileDownloader.ParallelProcessing
             // 
             // DownloadsContainer
             // 
+            DownloadsContainer.AutoScroll = true;
             DownloadsContainer.Location = new Point(15, 193);
             DownloadsContainer.Name = "DownloadsContainer";
             DownloadsContainer.Size = new Size(1196, 444);
-            DownloadsContainer.AutoScroll = true;
             DownloadsContainer.TabIndex = 7;
             // 
             // LocationInput
@@ -86,6 +84,7 @@ namespace FileDownloader.ParallelProcessing
             LocationInput.Name = "LocationInput";
             LocationInput.Size = new Size(500, 27);
             LocationInput.TabIndex = 6;
+            LocationInput.TextChanged += DownloadPath_Text;
             // 
             // SetLocationButton
             // 
@@ -98,7 +97,7 @@ namespace FileDownloader.ParallelProcessing
             SetLocationButton.TabIndex = 5;
             SetLocationButton.Text = "Browse";
             SetLocationButton.UseVisualStyleBackColor = false;
-            SetLocationButton.Click += button5_Click;
+            SetLocationButton.Click += DownlaodPathButton;
             // 
             // DownloadButton
             // 
@@ -111,7 +110,7 @@ namespace FileDownloader.ParallelProcessing
             DownloadButton.TabIndex = 4;
             DownloadButton.Text = "Download";
             DownloadButton.UseVisualStyleBackColor = false;
-            DownloadButton.Click += button4_Click;
+            DownloadButton.Click += DownloadButtonSingleThread;
             // 
             // InstructionLabel
             // 
@@ -134,7 +133,7 @@ namespace FileDownloader.ParallelProcessing
             URLTextBox.Size = new Size(969, 27);
             URLTextBox.TabIndex = 1;
             URLTextBox.Text = "HTTTP";
-            URLTextBox.TextChanged += textBox1_TextChanged;
+            URLTextBox.TextChanged += URLInputLabel;
             // 
             // URLLabel
             // 
@@ -146,6 +145,84 @@ namespace FileDownloader.ParallelProcessing
             URLLabel.Size = new Size(47, 28);
             URLLabel.TabIndex = 0;
             URLLabel.Text = "URL";
+            URLLabel.Click += URLLabel_Click;
+            // 
+            // DownloadPanel
+            // 
+            DownloadPanel.Location = new Point(0, 0);
+            DownloadPanel.Name = "DownloadPanel";
+            DownloadPanel.Size = new Size(200, 100);
+            DownloadPanel.TabIndex = 0;
+            // 
+            // Resume
+            // 
+            Resume.Location = new Point(0, 0);
+            Resume.Name = "Resume";
+            Resume.Size = new Size(75, 23);
+            Resume.TabIndex = 0;
+            // 
+            // Cancel
+            // 
+            Cancel.Location = new Point(0, 0);
+            Cancel.Name = "Cancel";
+            Cancel.Size = new Size(75, 23);
+            Cancel.TabIndex = 0;
+            // 
+            // Pause
+            // 
+            Pause.Location = new Point(0, 0);
+            Pause.Name = "Pause";
+            Pause.Size = new Size(75, 23);
+            Pause.TabIndex = 0;
+            // 
+            // SpeedValue
+            // 
+            SpeedValue.Location = new Point(0, 0);
+            SpeedValue.Name = "SpeedValue";
+            SpeedValue.Size = new Size(100, 23);
+            SpeedValue.TabIndex = 0;
+            // 
+            // SpeedLabel
+            // 
+            SpeedLabel.Location = new Point(0, 0);
+            SpeedLabel.Name = "SpeedLabel";
+            SpeedLabel.Size = new Size(100, 23);
+            SpeedLabel.TabIndex = 0;
+            // 
+            // DownloadedValue
+            // 
+            DownloadedValue.Location = new Point(0, 0);
+            DownloadedValue.Name = "DownloadedValue";
+            DownloadedValue.Size = new Size(100, 23);
+            DownloadedValue.TabIndex = 0;
+            // 
+            // DownloadedLabel
+            // 
+            DownloadedLabel.Location = new Point(0, 0);
+            DownloadedLabel.Name = "DownloadedLabel";
+            DownloadedLabel.Size = new Size(100, 23);
+            DownloadedLabel.TabIndex = 0;
+            // 
+            // ProgressBar
+            // 
+            ProgressBar.Location = new Point(0, 0);
+            ProgressBar.Name = "ProgressBar";
+            ProgressBar.Size = new Size(100, 23);
+            ProgressBar.TabIndex = 0;
+            // 
+            // FileNameValue
+            // 
+            FileNameValue.Location = new Point(0, 0);
+            FileNameValue.Name = "FileNameValue";
+            FileNameValue.Size = new Size(100, 23);
+            FileNameValue.TabIndex = 0;
+            // 
+            // FileNameLabel
+            // 
+            FileNameLabel.Location = new Point(0, 0);
+            FileNameLabel.Name = "FileNameLabel";
+            FileNameLabel.Size = new Size(100, 23);
+            FileNameLabel.TabIndex = 0;
             // 
             // MultiThreadDashboard
             // 
@@ -156,11 +233,9 @@ namespace FileDownloader.ParallelProcessing
             Controls.Add(ApplicationContainer);
             Name = "MultiThreadDashboard";
             Text = "MultiThreadDashboard";
+            Load += MultiThreadDashboard_Load;
             ApplicationContainer.ResumeLayout(false);
             ApplicationContainer.PerformLayout();
-            DownloadsContainer.ResumeLayout(false);
-            DownloadPanel.ResumeLayout(false);
-            DownloadPanel.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -185,7 +260,7 @@ namespace FileDownloader.ParallelProcessing
         private Button Resume;
         private Panel DownloadsContainer;
         private int _currentPanelYPosition = 15;
-        private void CreateDownloadPanel(FileInfo file)
+        private Panel CreateDownloadPanel(FileInfo file)
         {
             DownloadPanel.Name = "DownloadPanel";
             DownloadPanel.TabIndex = 2;
@@ -225,7 +300,8 @@ namespace FileDownloader.ParallelProcessing
                 Location = new Point(18, 54),
                 Name = "ProgressBar",
                 Size = new Size(822, 29),
-                TabIndex = 9
+                TabIndex = 9,
+                Maximum = 100
             };
 
             Label DownloadedLabel = new Label
@@ -331,7 +407,8 @@ namespace FileDownloader.ParallelProcessing
             ]);
             DownloadsContainer.Controls.Add(downloadPanel);
             // 10 for spacing between panels
-            _currentPanelYPosition += downloadPanel.Height + 10; 
+            _currentPanelYPosition += downloadPanel.Height + 10;
+            return downloadPanel;
         }
 
     }
