@@ -84,6 +84,7 @@ namespace FileDownloader.ParallelProcessing
             LocationInput.Name = "LocationInput";
             LocationInput.Size = new Size(500, 27);
             LocationInput.TabIndex = 6;
+            LocationInput.TextChanged += DownloadPath_Text;
             // 
             // SetLocationButton
             // 
@@ -96,6 +97,7 @@ namespace FileDownloader.ParallelProcessing
             SetLocationButton.TabIndex = 5;
             SetLocationButton.Text = "Browse";
             SetLocationButton.UseVisualStyleBackColor = false;
+            SetLocationButton.Click += DownlaodPathButton;
             // 
             // DownloadButton
             // 
@@ -108,6 +110,7 @@ namespace FileDownloader.ParallelProcessing
             DownloadButton.TabIndex = 4;
             DownloadButton.Text = "Download";
             DownloadButton.UseVisualStyleBackColor = false;
+            DownloadButton.Click += DownloadButtonSingleThread;
             // 
             // InstructionLabel
             // 
@@ -119,6 +122,7 @@ namespace FileDownloader.ParallelProcessing
             InstructionLabel.Size = new Size(403, 23);
             InstructionLabel.TabIndex = 3;
             InstructionLabel.Text = "Please Enter the URL Link in the TextBox Below\r\n";
+            InstructionLabel.Click += label2_Click;
             // 
             // URLTextBox
             // 
@@ -129,6 +133,7 @@ namespace FileDownloader.ParallelProcessing
             URLTextBox.Size = new Size(969, 27);
             URLTextBox.TabIndex = 1;
             URLTextBox.Text = "HTTTP";
+            URLTextBox.TextChanged += URLInputLabel;
             // 
             // URLLabel
             // 
@@ -140,6 +145,7 @@ namespace FileDownloader.ParallelProcessing
             URLLabel.Size = new Size(47, 28);
             URLLabel.TabIndex = 0;
             URLLabel.Text = "URL";
+            URLLabel.Click += URLLabel_Click;
             // 
             // DownloadPanel
             // 
@@ -227,6 +233,7 @@ namespace FileDownloader.ParallelProcessing
             Controls.Add(ApplicationContainer);
             Name = "MultiThreadDashboard";
             Text = "MultiThreadDashboard";
+            Load += MultiThreadDashboard_Load;
             ApplicationContainer.ResumeLayout(false);
             ApplicationContainer.PerformLayout();
             ResumeLayout(false);
@@ -259,7 +266,7 @@ namespace FileDownloader.ParallelProcessing
             DownloadPanel.TabIndex = 2;
             Panel downloadPanel = new Panel
             {
-                Size = new Size(1154, 141),
+                Size = new Size(1154,141),
                 Location = new Point(12, _currentPanelYPosition),
 
             };
@@ -383,6 +390,7 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Pause",
                 UseVisualStyleBackColor = false
             };
+            PauseButton.Click += button6_Click;
 
 
             downloadPanel.Controls.AddRange([

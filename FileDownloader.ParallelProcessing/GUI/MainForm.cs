@@ -2,7 +2,8 @@ namespace FileDownloader.ParallelProcessing
 {
     public partial class MainForm : Form
     {
-        private MultiThreadDashboard multiThreadFormInstance = null;
+        private MultiThreadDashboard MultiThreadFormInstance = null;
+        private SingleThreadDashboard SingleThreadFormInstance = null;
 
         public MainForm()
         {
@@ -13,19 +14,19 @@ namespace FileDownloader.ParallelProcessing
         #region Buttons Events
         private void MultipleThreadButtonClick(object sender, EventArgs e)
         {
-            // To Check Only 1 Instance Of the Downloader is Opened 
+            // To Check Only 1 Instance Of the Downloader is Opened
 
-            if (multiThreadFormInstance == null || multiThreadFormInstance.IsDisposed)
+            if (MultiThreadFormInstance == null || MultiThreadFormInstance.IsDisposed)
             {
-                multiThreadFormInstance = new MultiThreadDashboard();
-                multiThreadFormInstance.Show();
+                MultiThreadFormInstance = new MultiThreadDashboard();
+                MultiThreadFormInstance.Show();
             }
             else
             {
-                multiThreadFormInstance.BringToFront();
+                MultiThreadFormInstance.BringToFront();
             }
         }
-        
+
         private void SingleThreadButtonClick(object sender, EventArgs e)
         {
 
@@ -40,7 +41,17 @@ namespace FileDownloader.ParallelProcessing
         }
         private void SingleThreadLabelClick(object sender, EventArgs e)
         {
+            // To Check Only 1 Instance Of the Downloader is Opened
 
+            if (SingleThreadFormInstance == null || SingleThreadFormInstance.IsDisposed)
+            {
+                SingleThreadFormInstance = new SingleThreadDashboard();
+                SingleThreadFormInstance.Show();
+            }
+            else
+            {
+                SingleThreadFormInstance.BringToFront();
+            }
         }
 
         private void MultiThreadNoteLabelClick(object sender, EventArgs e)
