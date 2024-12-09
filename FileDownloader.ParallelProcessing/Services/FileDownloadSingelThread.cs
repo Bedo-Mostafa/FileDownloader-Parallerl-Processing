@@ -5,7 +5,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace FileDownloader.ParallelProcessing.Models
+namespace FileDownloader.ParallelProcessing.Services
 {
     public class FileDownloadSingelThread
     {
