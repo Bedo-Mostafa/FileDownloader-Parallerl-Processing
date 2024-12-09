@@ -9,5 +9,7 @@ namespace FileDownloader.ParallelProcessing.Models
     public class FileInfo
     {
         public string FileName { get; set; }
+
+        public Queue<string> urls = new Queue<string>();
     }
 }
