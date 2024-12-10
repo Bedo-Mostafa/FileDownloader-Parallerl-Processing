@@ -1,4 +1,5 @@
 ﻿//using FileDownloader.ParallelProcessing.Models;
+using FileDownloader.ParallelProcessing.Models;
 using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
 
 namespace FileDownloader.ParallelProcessing
@@ -258,7 +259,7 @@ namespace FileDownloader.ParallelProcessing
         private Button Resume;
         private Panel DownloadsContainer;
         private int _currentPanelYPosition = 15;
-        private Panel CreateDownloadPanel(FileInfo file)
+        private Panel CreateDownloadPanel(FileInfo file,CancellationTokenSource cts)
         {
             DownloadPanel.Name = "DownloadPanel";
             DownloadPanel.TabIndex = 2;
@@ -376,6 +377,11 @@ namespace FileDownloader.ParallelProcessing
                 UseVisualStyleBackColor = false
             };
 
+            CancelButton.Click += (s, e) =>
+            {
+                cts.Cancel(); // Cancel the task
+            };
+
             Button PauseButton = new Button
             {
                 BackColor = Color.Goldenrod,
@@ -408,5 +414,7 @@ namespace FileDownloader.ParallelProcessing
             return downloadPanel;
         }
 
-    }
+
+
+        }
 }
