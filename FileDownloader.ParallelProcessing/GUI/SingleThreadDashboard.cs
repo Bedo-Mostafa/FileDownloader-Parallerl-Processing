@@ -1,6 +1,7 @@
 ﻿using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
 using FileDownloadSingelThread = FileDownloader.ParallelProcessing.Services.FileDownloadSingelThread;
 using System.Threading.Tasks;
+using FileDownloader.ParallelProcessing.Models;
 
 namespace FileDownloader.ParallelProcessing
 {
@@ -13,98 +14,122 @@ namespace FileDownloader.ParallelProcessing
 
         FileDownloadSingelThread fileDownloadSingleThread = new FileDownloadSingelThread();
         FileInfo information = new FileInfo();
-        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        CancellationTokenSource _cancellationTokenSource;
 
         private void button1_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
         }
 
         private void progressBar1_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
         private void label2_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
         private async void DownloadButtonSingleThread(object sender, EventArgs e)
         {
-            string url = URLTextBox.Text.Trim();
-            string pathDownload = LocationInput.Text.Trim();
-            string fileName = fileDownloadSingleThread.GetInfo(url);
-            information.FileName = fileName;
-
             // clear the inputs
             //URLTextBox.Clear();
             //LocationInput.Clear();
 
-            var downloadPanel = CreateDownloadPanel(information);
-            var progressBar = (downloadPanel.Controls["ProgressBar"] as ProgressBar);
-            var SpeedValue = (downloadPanel.Controls["SpeedValue"] as Label);
-
-            var progress = new Progress<(int Progress, long Speed)>(value =>
+            if (string.IsNullOrWhiteSpace(LocationInput.Text))
             {
-                // Update the ProgressBar or Label with progress
-                progressBar.Value = value.Progress;
-                SpeedValue.Text = $"{value.Speed / 1024} KB/s";
-            });
+                MessageBox.Show("Please select a destination folder.");
+                return;
+            }
+
+            string url = URLTextBox.Text.Trim();
+            string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
+            string destination = Path.Combine(LocationInput.Text, fileName);
+            FileInfo file = new FileInfo(fileName);
 
             _cancellationTokenSource = new CancellationTokenSource(); // Reset the token source
+            var _token = _cancellationTokenSource.Token;
+
+            // Create a new download panel
+            Panel downloadPanel = CreateDownloadPanel(file, _cancellationTokenSource);
+            var fileNameLabel = (downloadPanel.Controls["FileNameValue"] as Label);
+            var progressBar = (downloadPanel.Controls["ProgressBar"] as ProgressBar);
+            var downloadedBytesLabel = (downloadPanel.Controls["DownloadedValue"] as Label);
+            var speedValue = (downloadPanel.Controls["SpeedValue"] as Label);
+            var cancelButton = (downloadPanel.Controls["CancelButton"] as Button);
+
+
+            // Create a progress reporter
+            var progress = new Progress<DownloadProgress>(p =>
+            {
+                // Update the progress bar and other UI elements
+                progressBar.Value = p.Percentage;
+                fileNameLabel.Text = file.FileName;
+                downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
+                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
+            });
 
             try
             {
                 await Task.Run(() =>
                 {
-                    fileDownloadSingleThread.DownloadFilesSequentially(url, pathDownload, progress, _cancellationTokenSource.Token);
-                }).WaitAsync(_cancellationTokenSource.Token);
+                    fileDownloadSingleThread.DownloadFilesSequentiallyAsync(url, destination, progress, _token);
+                });
             }
-            catch (Exception)
+            catch (OperationCanceledException)
             {
-                //_cancellationTokenSource.Dispose();
-                MessageBox.Show($"Download for task  canceled.", "Canceled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                //MessageBox.Show("Download canceled.");
+                MessageBox.Show("Download was canceled.", "Canceled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            finally
+            {
+                _cancellationTokenSource.Dispose();
             }
         }
 
-        private void CancelButton_Click(object sender, EventArgs e)
+        private void CancelButton_Click(object sender, EventArgs e, CancellationTokenSource cancellationTokenSource)
         {
-            if (_cancellationTokenSource != null)
+            cancellationTokenSource.Cancel(); // Trigger cancellation
+            Button? button = sender as Button;
+            if (button != null)
             {
-                _cancellationTokenSource.Cancel(); // Trigger cancellation
+                button.Enabled = false; // Disable the button
+                cancellationTokenSource.Dispose();
             }
         }
 
-        private void DownlaodPathButton(object sender, EventArgs e)
+        private void SetLocationButton_Click(object sender, EventArgs e)
         {
-            //CreateDownloadPanel(information);
+            FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+            {
+                LocationInput.Text = folderBrowserDialog.SelectedPath;
+            }
         }
 
         private void label3_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
         private void label4_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
         private void label6_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
         private void label8_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
@@ -115,12 +140,12 @@ namespace FileDownloader.ParallelProcessing
 
         private void button2_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
         }
 
         private void button6_Click(object sender, EventArgs e)
         {
-            CreateDownloadPanel(information);
+            //CreateDownloadPanel(information);
 
         }
 
