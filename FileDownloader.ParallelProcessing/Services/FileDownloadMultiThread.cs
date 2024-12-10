@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,53 +12,57 @@ namespace FileDownloader.ParallelProcessing.Services
 {
     class FileDownloadMultiThread
     {
-        public async Task DownloadFile(string url, string destination, IProgress<DownloadProgress> progress)
+        public async Task DownloadFileAsync(string url, string destination, IProgress<DownloadProgress> progress, CancellationToken cancellationToken)
         {
             try
             {
-                using (WebClient webClient = new WebClient())
+                using (HttpClient client = new HttpClient())
                 {
-                    long totalBytes = 0;
-                    Stopwatch stopwatch = new Stopwatch();
-                    stopwatch.Start(); // Start the stopwatch
-                    long previousBytesReceived = 0;
-                    DateTime previousTime = DateTime.Now;
+                    HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                    response.EnsureSuccessStatusCode();
 
-                    webClient.DownloadProgressChanged += (s, e) =>
+                    long totalBytes = response.Content.Headers.ContentLength ?? 0;
+                    long bytesDownloaded = 0;
+
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    using (var fileStream = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
                     {
-                        long currentBytesReceived = e.BytesReceived;
-                        totalBytes = currentBytesReceived; // Update totalBytes
+                        byte[] buffer = new byte[8192];
+                        Stopwatch stopwatch = Stopwatch.StartNew();
 
-                        TimeSpan timeElapsed = DateTime.Now - previousTime;
-
-                        if (timeElapsed.TotalSeconds > 0)
+                        int bytesRead;
+                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
                         {
-                            float speedInKbps = CalculateSpeed(currentBytesReceived, stopwatch); // Speed in KB/s
+                            await fileStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
+                            bytesDownloaded += bytesRead;
+
+                            double speed = bytesDownloaded / stopwatch.Elapsed.TotalSeconds / 1024; // KB/s
+                            int percentage = totalBytes > 0 ? (int)((bytesDownloaded * 100L) / totalBytes) : 0;
+
                             progress.Report(new DownloadProgress
                             {
-                                Percentage = e.ProgressPercentage,
-                                BytesReceived = e.BytesReceived,
-                                TotalBytesToReceive = e.TotalBytesToReceive,
-                                Speed = speedInKbps, // Update speed in KB/s
+                                Percentage = percentage,
+                                BytesReceived = bytesDownloaded,
+                                TotalBytesToReceive = totalBytes,
+                                Speed = speed,
                             });
-
-                            previousBytesReceived = currentBytesReceived;
-                            previousTime = DateTime.Now; // Reset the timer
                         }
-                    };
 
-                    await webClient.DownloadFileTaskAsync(new Uri(url), destination);
+                        stopwatch.Stop();
+                    }
                 }
             }
-            catch (UnauthorizedAccessException ex)
+            catch (OperationCanceledException)
             {
-                MessageBox.Show("Access denied: " + ex.Message);
+                MessageBox.Show("Download was canceled.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show("An error occurred: " + ex.Message);
+                MessageBox.Show($"An error occurred: {ex.Message}");
             }
         }
+
+
 
         private float CalculateSpeed(long bytesReceived, Stopwatch stopwatch)
         {
