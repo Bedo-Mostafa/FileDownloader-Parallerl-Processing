@@ -96,6 +96,7 @@ namespace FileDownloader.ParallelProcessing
             SetLocationButton.TabIndex = 5;
             SetLocationButton.Text = "Browse";
             SetLocationButton.UseVisualStyleBackColor = false;
+            SetLocationButton.Click += SetLocationButton_Click;
             // 
             // DownloadButton
             // 
@@ -120,6 +121,7 @@ namespace FileDownloader.ParallelProcessing
             InstructionLabel.Size = new Size(403, 23);
             InstructionLabel.TabIndex = 3;
             InstructionLabel.Text = "Please Enter the URL Link in the TextBox Below\r\n";
+            InstructionLabel.Click += InstructionLabel_Click;
             // 
             // URLTextBox
             // 
@@ -127,9 +129,10 @@ namespace FileDownloader.ParallelProcessing
             URLTextBox.ForeColor = SystemColors.Info;
             URLTextBox.Location = new Point(68, 65);
             URLTextBox.Name = "URLTextBox";
+            URLTextBox.PlaceholderText = "Example : https://dotnetexample/postman.exe";
             URLTextBox.Size = new Size(969, 27);
             URLTextBox.TabIndex = 1;
-            URLTextBox.Text = "HTTTP";
+            URLTextBox.TextChanged += URLTextBox_TextChanged;
             // 
             // URLLabel
             // 
@@ -232,6 +235,7 @@ namespace FileDownloader.ParallelProcessing
             ApplicationContainer.PerformLayout();
             ResumeLayout(false);
         }
+
 
         #endregion
         private Panel ApplicationContainer;
