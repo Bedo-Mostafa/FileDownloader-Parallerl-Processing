@@ -264,6 +264,7 @@ namespace FileDownloader.ParallelProcessing
         {
             DownloadPanel.Name = "DownloadPanel";
             DownloadPanel.TabIndex = 2;
+            int taskId = 0;
             Panel downloadPanel = new Panel
             {
                 Size = new Size(1154,141),
@@ -377,6 +378,7 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Cancel",
                 UseVisualStyleBackColor = false
             };
+            CancelButton.Click += CancelButton_Click;
 
             Button PauseButton = new Button
             {
@@ -411,5 +413,9 @@ namespace FileDownloader.ParallelProcessing
             return downloadPanel;
         }
 
+        //private void CancelButton_Click1(object sender, EventArgs e)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

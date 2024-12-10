@@ -1,5 +1,6 @@
 ﻿using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
 using FileDownloadSingelThread = FileDownloader.ParallelProcessing.Services.FileDownloadSingelThread;
+using System.Threading.Tasks;
 
 namespace FileDownloader.ParallelProcessing
 {
@@ -12,6 +13,7 @@ namespace FileDownloader.ParallelProcessing
 
         FileDownloadSingelThread fileDownloadSingleThread = new FileDownloadSingelThread();
         FileInfo information = new FileInfo();
+        CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -52,10 +54,30 @@ namespace FileDownloader.ParallelProcessing
                 SpeedValue.Text = $"{value.Speed / 1024} KB/s";
             });
 
-            await Task.Run(() => fileDownloadSingleThread.DownloadFilesSequentially(url, pathDownload, progress));
+            _cancellationTokenSource = new CancellationTokenSource(); // Reset the token source
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    fileDownloadSingleThread.DownloadFilesSequentially(url, pathDownload, progress, _cancellationTokenSource.Token);
+                }).WaitAsync(_cancellationTokenSource.Token);
+            }
+            catch (Exception)
+            {
+                //_cancellationTokenSource.Dispose();
+                MessageBox.Show($"Download for task  canceled.", "Canceled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //MessageBox.Show("Download canceled.");
+            }
         }
 
-
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            if (_cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel(); // Trigger cancellation
+            }
+        }
 
         private void DownlaodPathButton(object sender, EventArgs e)
         {
