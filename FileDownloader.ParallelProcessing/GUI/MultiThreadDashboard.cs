@@ -102,7 +102,7 @@ namespace FileDownloader.ParallelProcessing
 
         private void URLTextBox_TextChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         private void InstructionLabel_Click(object sender, EventArgs e)

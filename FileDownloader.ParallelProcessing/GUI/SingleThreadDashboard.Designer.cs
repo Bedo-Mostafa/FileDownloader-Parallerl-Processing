@@ -97,7 +97,7 @@ namespace FileDownloader.ParallelProcessing
             SetLocationButton.TabIndex = 5;
             SetLocationButton.Text = "Browse";
             SetLocationButton.UseVisualStyleBackColor = false;
-            SetLocationButton.Click += DownlaodPathButton;
+            SetLocationButton.Click += SetLocationButton_Click;
             // 
             // DownloadButton
             // 
@@ -260,11 +260,10 @@ namespace FileDownloader.ParallelProcessing
         private Button Resume;
         private Panel DownloadsContainer;
         private int _currentPanelYPosition = 15;
-        private Panel CreateDownloadPanel(FileInfo file)
+        private Panel CreateDownloadPanel(FileInfo file, CancellationTokenSource _cancellationTokenSource)
         {
             DownloadPanel.Name = "DownloadPanel";
             DownloadPanel.TabIndex = 2;
-            int taskId = 0;
             Panel downloadPanel = new Panel
             {
                 Size = new Size(1154,141),
@@ -378,7 +377,7 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Cancel",
                 UseVisualStyleBackColor = false
             };
-            CancelButton.Click += CancelButton_Click;
+            CancelButton.Click += (sender, e) => CancelButton_Click(sender, e, _cancellationTokenSource);
 
             Button PauseButton = new Button
             {
@@ -412,10 +411,5 @@ namespace FileDownloader.ParallelProcessing
             _currentPanelYPosition += downloadPanel.Height + 10;
             return downloadPanel;
         }
-
-        //private void CancelButton_Click1(object sender, EventArgs e)
-        //{
-        //    throw new NotImplementedException();
-        //}
     }
 }
