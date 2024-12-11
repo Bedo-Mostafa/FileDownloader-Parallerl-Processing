@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace FileDownloader.ParallelProcessing
 {
     public partial class MainForm : Form
@@ -18,7 +20,7 @@ namespace FileDownloader.ParallelProcessing
 
             if (MultiThreadFormInstance == null || MultiThreadFormInstance.IsDisposed)
             {
-                MultiThreadFormInstance = new MultiThreadDashboard();
+                MultiThreadFormInstance = new MultiThreadDashboard(int.Parse(ThreadsNumberInput.Text));
                 MultiThreadFormInstance.Show();
             }
             else
@@ -68,5 +70,38 @@ namespace FileDownloader.ParallelProcessing
 
         }
         #endregion
+
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ThreadsNumberInput_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Allow only digits and control keys (e.g., Backspace)
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+            {
+                e.Handled = true; // Block the input
+            }
+        }
+
+        private void ThreadsNumberInput_Validating(object sender, CancelEventArgs e)
+        {
+            if (!int.TryParse(ThreadsNumberInput.Text, out _))
+            {
+                MessageBox.Show("Please enter a valid number.");
+                e.Cancel = true; // Keep focus on the input
+            }
+        }
+
+        private void ThreadsNumberInput_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }
