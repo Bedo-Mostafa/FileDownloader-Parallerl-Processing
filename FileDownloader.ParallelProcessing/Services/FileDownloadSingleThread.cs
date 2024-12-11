@@ -43,21 +43,25 @@ namespace FileDownloader.ParallelProcessing.Services
                             fileStream = new FileStream(destinationPath, FileMode.Append, FileAccess.Write, FileShare.None, 8192, true))
                         {
                             byte[] buffer = new byte[8192];
-                            Stopwatch stopwatch = Stopwatch.StartNew();
+                            Stopwatch stopwatch = new Stopwatch();
                             long previousBytesReceived = totalBytesDownloaded;
-                            DateTime previousTime = DateTime.Now;
 
                             int bytesRead;
+                            stopwatch.Start();
+
                             while ((bytesRead = await contentStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationTokenSource.Token)) > 0)
                             {
                                 await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationTokenSource.Token);
                                 totalBytesDownloaded += bytesRead;
 
-                                TimeSpan timeElapsed = DateTime.Now - previousTime;
+                                // Measure elapsed time since last update
+                                double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
 
-                                if (timeElapsed.TotalSeconds > 0)
+                                if (secondsElapsed >= 1) // Update progress every second
                                 {
-                                    float speedInKbps = CalculateSpeed(totalBytesDownloaded - previousBytesReceived, stopwatch);
+                                    // Calculate download speed in KB/s
+                                    double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+
                                     progress?.Report(new DownloadProgress
                                     {
                                         Percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0,
@@ -66,10 +70,12 @@ namespace FileDownloader.ParallelProcessing.Services
                                         Speed = speedInKbps, // Speed in KB/s
                                     });
 
+                                    // Reset stopwatch and update previous bytes
                                     previousBytesReceived = totalBytesDownloaded;
-                                    previousTime = DateTime.Now;
+                                    stopwatch.Restart();
                                 }
                             }
+
                         }
                     }
                 }
@@ -86,16 +92,6 @@ namespace FileDownloader.ParallelProcessing.Services
             {
                 _semaphore.Release(); // Release the semaphore
             }
-        }
-
-        private float CalculateSpeed(long bytesReceived, Stopwatch stopwatch)
-        {
-            // Calculate speed in KB/s
-            if (stopwatch.Elapsed.TotalSeconds > 0)
-            {
-                return (float)(bytesReceived / 1024 / stopwatch.Elapsed.TotalSeconds); // Convert to KB/s
-            }
-            return 0;
         }
     }
 }

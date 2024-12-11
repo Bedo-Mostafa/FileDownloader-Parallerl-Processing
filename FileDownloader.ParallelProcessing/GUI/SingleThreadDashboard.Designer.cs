@@ -123,7 +123,6 @@ namespace FileDownloader.ParallelProcessing
             InstructionLabel.Size = new Size(403, 23);
             InstructionLabel.TabIndex = 3;
             InstructionLabel.Text = "Please Enter the URL Link in the TextBox Below\r\n";
-            //InstructionLabel.Click += label2_Click;
             // 
             // URLTextBox
             // 
@@ -134,7 +133,6 @@ namespace FileDownloader.ParallelProcessing
             URLTextBox.Size = new Size(969, 27);
             URLTextBox.TabIndex = 1;
             URLTextBox.Text = "HTTTP";
-            //URLTextBox.TextChanged += URLInputLabel;
             // 
             // URLLabel
             // 
@@ -146,7 +144,6 @@ namespace FileDownloader.ParallelProcessing
             URLLabel.Size = new Size(47, 28);
             URLLabel.TabIndex = 0;
             URLLabel.Text = "URL";
-            //URLLabel.Click += URLLabel_Click;
             // 
             // DownloadPanel
             // 
@@ -225,16 +222,15 @@ namespace FileDownloader.ParallelProcessing
             FileNameLabel.Size = new Size(100, 23);
             FileNameLabel.TabIndex = 0;
             // 
-            // MultiThreadDashboard
+            // SingleThreadDashboard
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(28, 28, 28);
             ClientSize = new Size(1262, 673);
             Controls.Add(ApplicationContainer);
-            Name = "MultiThreadDashboard";
-            Text = "MultiThreadDashboard";
-            //Load += MultiThreadDashboard_Load;
+            Name = "SingleThreadDashboard";
+            Text = "SingleThreadDashboard";
             ApplicationContainer.ResumeLayout(false);
             ApplicationContainer.PerformLayout();
             ResumeLayout(false);
@@ -261,6 +257,23 @@ namespace FileDownloader.ParallelProcessing
         private Button Resume;
         private Panel DownloadsContainer;
         private int _currentPanelYPosition = 15;
+
+
+        private void RearrangePanels()
+        {
+            int currentYPosition = 15; // Starting position for the first panel
+
+            foreach (Control panel in DownloadsContainer.Controls)
+            {
+                // Set the new position for each panel
+                panel.Location = new Point(panel.Location.X, currentYPosition);
+                currentYPosition += panel.Height + 10; // Add spacing between panels
+            }
+
+            // Reset the current Y position tracker
+            _currentPanelYPosition = currentYPosition;
+        }
+
         private Downloadpanel CreateDownloadPanel(FileInfo file, CancellationTokenSource _cancellationTokenSource, string url, string destination, IProgress<DownloadProgress> progress)
         {
             Downloadpanel result = new Downloadpanel();
@@ -380,7 +393,7 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Cancel",
                 UseVisualStyleBackColor = false
             };
-            CancelButton.Click += (sender, e) => CancelButton_Click(sender, e, _cancellationTokenSource);
+            CancelButton.Click += (sender, e) => CancelButton_Click(sender, e, result);
 
             Button PauseButton = new Button
             {
@@ -412,12 +425,11 @@ namespace FileDownloader.ParallelProcessing
             DownloadsContainer.Controls.Add(downloadPanel);
 
             
-            result.dwonloadpanel = downloadPanel;
+            result.downloadpanel = downloadPanel;
             result._cancellationTokenSource = _cancellationTokenSource;
             result.URL = url;
             result.Destination = destination;
             result.progress = progress;
-            //resutl.URL
             // 10 for spacing between panels
             _currentPanelYPosition += downloadPanel.Height + 10;
             return result;
