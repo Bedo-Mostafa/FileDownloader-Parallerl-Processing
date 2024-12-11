@@ -32,8 +32,6 @@ namespace FileDownloader.ParallelProcessing
         private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
         private async void DownloadButton_Click(object sender, EventArgs e)
         {
-
-
             if (string.IsNullOrWhiteSpace(LocationInput.Text))
             {
                 MessageBox.Show("Please select a destination folder.");
@@ -43,6 +41,21 @@ namespace FileDownloader.ParallelProcessing
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
             string destination = Path.Combine(LocationInput.Text, fileName);
             FileInfo file = new FileInfo(fileName);
+
+            // Check if the file already exists and generate a new file name with a postfix
+            if (File.Exists(destination))
+            {
+                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                string fileExtension = Path.GetExtension(fileName);
+                int counter = 1;
+
+                // Generate a unique file name with a postfix (e.g., fileName(1), fileName(2), ...)
+                while (File.Exists(destination))
+                {
+                    string newFileName = $"{fileNameWithoutExtension}({counter++}){fileExtension}";
+                    destination = Path.Combine(LocationInput.Text, newFileName);
+                }
+            }
 
             // Create a new download panel
             var cts = new CancellationTokenSource();
@@ -89,6 +102,7 @@ namespace FileDownloader.ParallelProcessing
                 _semaphore.Release();
             }
         }
+
 
 
         private void SetLocationButton_Click(object sender, EventArgs e)
