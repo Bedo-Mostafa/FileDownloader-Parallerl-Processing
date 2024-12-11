@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FileDownloader.ParallelProcessing.Models
+﻿namespace FileDownloader.ParallelProcessing.Models
 {
 
     public class DownloadProgress
@@ -18,9 +12,9 @@ namespace FileDownloader.ParallelProcessing.Models
 
     public class Downloadpanel
     {
-        public Panel dwonloadpanel { get; set; }
-        public string URL{ get; set; }
-        public string Destination{ get; set; }
+        public Panel downloadpanel { get; set; }
+        public string URL { get; set; }
+        public string Destination { get; set; }
         public IProgress<DownloadProgress> progress { get; set; }
         public CancellationTokenSource _cancellationTokenSource { get; set; }
     }
