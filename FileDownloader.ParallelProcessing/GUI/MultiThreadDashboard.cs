@@ -20,17 +20,20 @@ namespace FileDownloader.ParallelProcessing
     {
 
         FileDownloadMultiThread downloader = new FileDownloadMultiThread();
-        private static readonly int MAX_NUMBER_OF_DOWNLOADS = 5;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(MAX_NUMBER_OF_DOWNLOADS);
+        private readonly int MAX_NUMBER_OF_DOWNLOADS;
+        private readonly SemaphoreSlim _semaphore;
 
-        public MultiThreadDashboard()
+        public MultiThreadDashboard(int threadsNumbers)
         {
             InitializeComponent();
+            this.MAX_NUMBER_OF_DOWNLOADS = threadsNumbers;
+            _semaphore = new SemaphoreSlim(MAX_NUMBER_OF_DOWNLOADS);
         }
-
         private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
         private async void DownloadButton_Click(object sender, EventArgs e)
         {
+
+
             if (string.IsNullOrWhiteSpace(LocationInput.Text))
             {
                 MessageBox.Show("Please select a destination folder.");
@@ -43,12 +46,11 @@ namespace FileDownloader.ParallelProcessing
 
             // Create a new download panel
             var cts = new CancellationTokenSource();
-            Panel downloadPanel = CreateDownloadPanel(file,cts);
+            Panel downloadPanel = CreateDownloadPanel(file, cts);
             var fileNameLabel = (downloadPanel.Controls["FileNameValue"] as Label);
             var progressBar = (downloadPanel.Controls["ProgressBar"] as ProgressBar);
             var downloadedBytesLabel = (downloadPanel.Controls["DownloadedValue"] as Label);
             var speedValue = (downloadPanel.Controls["SpeedValue"] as Label);
-
 
             // Create a progress reporter
             var progress = new Progress<DownloadProgress>(p =>
@@ -57,33 +59,38 @@ namespace FileDownloader.ParallelProcessing
                 progressBar.Value = p.Percentage;
                 fileNameLabel.Text = file.FileName;
                 downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
-                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in KB/s with 2 decimal places
+                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
             });
 
-            // Start the download in a separate thread
-            await Task.Run(() =>
+            // Use semaphore to limit concurrent downloads
+            await _semaphore.WaitAsync();
+            try
             {
-                downloader.DownloadFileAsync(URLTextBox.Text, destination, progress, cts.Token);
-            });
+                // Start the download
+                await Task.Run(async () =>
+                {
+                    try
+                    {
+                        await downloader.DownloadFileAsync(URLTextBox.Text, destination, progress, cts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        MessageBox.Show($"Download for {fileName} was canceled.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"An error occurred: {ex.Message}");
+                    }
+                });
+            }
+            finally
+            {
+                // Release semaphore after download is complete
+                _semaphore.Release();
+            }
         }
 
 
-
-
-
-
-
-
-
-
-
-
-        // Cancel Buttton 
-        // Pasue
-        // Resume
-
-
-        // Share Resources to solve starvation
         private void SetLocationButton_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
@@ -100,7 +107,7 @@ namespace FileDownloader.ParallelProcessing
         {
 
         }
-
+            
         private void InstructionLabel_Click(object sender, EventArgs e)
         {
 

@@ -348,7 +348,7 @@ namespace FileDownloader.ParallelProcessing
                 Name = "SpeedValue",
                 Size = new Size(90, 28),
                 TabIndex = 13,
-                Text = "??? Mb/s"
+                Text = "  Mb/s"
             };
 
             Button ResumeButton = new Button
@@ -380,6 +380,9 @@ namespace FileDownloader.ParallelProcessing
             CancelButton.Click += (s, e) =>
             {
                 cts.Cancel(); // Cancel the task
+                cts.Dispose(); // to prevent memory leak
+                CancelButton.Enabled = false;
+
             };
 
             Button PauseButton = new Button
