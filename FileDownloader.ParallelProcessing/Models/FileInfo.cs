@@ -21,8 +21,8 @@ namespace FileDownloader.ParallelProcessing.Models
             FileName = fileName;
             this.urls = urls;
         }
-        public FileInfo(string fileName) { 
-        
+        public FileInfo(string fileName) {
+
             FileName = fileName;
         }
     }

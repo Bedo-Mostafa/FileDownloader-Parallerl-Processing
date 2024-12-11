@@ -262,11 +262,12 @@ namespace FileDownloader.ParallelProcessing
         private int _currentPanelYPosition = 15;
         private Panel CreateDownloadPanel(FileInfo file, CancellationTokenSource _cancellationTokenSource)
         {
+            bool isPaused = false;
             DownloadPanel.Name = "DownloadPanel";
             DownloadPanel.TabIndex = 2;
             Panel downloadPanel = new Panel
             {
-                Size = new Size(1154,141),
+                Size = new Size(1154, 141),
                 Location = new Point(12, _currentPanelYPosition),
 
             };
@@ -364,6 +365,7 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Resume",
                 UseVisualStyleBackColor = false
             };
+            ResumeButton.Click += (sender, e) => ResumeButton_Click(sender, e, _cancellationTokenSource);
 
             Button CancelButton = new Button
             {
@@ -391,8 +393,8 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Pause",
                 UseVisualStyleBackColor = false
             };
-            PauseButton.Click += button6_Click;
 
+            PauseButton.Click += (sender, e) => PauseButton_Click(sender, e, _cancellationTokenSource);
 
             downloadPanel.Controls.AddRange([
                 FileNameValue,
