@@ -15,4 +15,13 @@ namespace FileDownloader.ParallelProcessing.Models
         public double Speed { get; set; }
 
     }
+
+    public class Downloadpanel
+    {
+        public Panel dwonloadpanel { get; set; }
+        public string URL{ get; set; }
+        public string Destination{ get; set; }
+        public IProgress<DownloadProgress> progress { get; set; }
+        public CancellationTokenSource _cancellationTokenSource { get; set; }
+    }
 }
