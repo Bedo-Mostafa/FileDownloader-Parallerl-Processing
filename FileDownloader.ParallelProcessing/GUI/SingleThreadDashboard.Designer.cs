@@ -424,7 +424,6 @@ namespace FileDownloader.ParallelProcessing
             ]);
             DownloadsContainer.Controls.Add(downloadPanel);
 
-            
             result.downloadpanel = downloadPanel;
             result._cancellationTokenSource = _cancellationTokenSource;
             result.URL = url;

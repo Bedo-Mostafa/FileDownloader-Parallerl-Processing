@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace FileDownloader.ParallelProcessing.Services
@@ -16,39 +17,71 @@ namespace FileDownloader.ParallelProcessing.Services
         {
             try
             {
-                using (HttpClient client = new HttpClient())
+                long totalBytesToReceive = 0;
+                long totalBytesDownloaded = 0;
+
+                if (File.Exists(destination))
                 {
-                    HttpResponseMessage response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-                    response.EnsureSuccessStatusCode();
+                    totalBytesDownloaded = new System.IO.FileInfo(destination).Length; // Get the size of the existing file
+                }
 
-                    long totalBytes = response.Content.Headers.ContentLength ?? 0;
-                    long bytesDownloaded = 0;
+                using (HttpClient httpClient = new HttpClient())
+                {
+                    httpClient.Timeout = TimeSpan.FromMinutes(30); // Set a timeout value
 
-                    using (var stream = await response.Content.ReadAsStreamAsync())
-                    using (var fileStream = new FileStream(destination, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+                    if (totalBytesDownloaded > 0)
                     {
-                        byte[] buffer = new byte[8192];
-                        Stopwatch stopwatch = Stopwatch.StartNew();
+                        request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(totalBytesDownloaded, null);
+                    }
 
-                        int bytesRead;
-                        while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                    using (HttpResponseMessage response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken))
+                    {
+                        response.EnsureSuccessStatusCode(); // Throw an exception if the HTTP response is an error
+
+                        if (response.Content.Headers.ContentLength.HasValue)
                         {
-                            await fileStream.WriteAsync(buffer, 0, bytesRead, cancellationToken);
-                            bytesDownloaded += bytesRead;
-
-                            double speed = bytesDownloaded / stopwatch.Elapsed.TotalSeconds / 1024; // KB/s
-                            int percentage = totalBytes > 0 ? (int)((bytesDownloaded * 100L) / totalBytes) : 0;
-
-                            progress.Report(new DownloadProgress
-                            {
-                                Percentage = percentage,
-                                BytesReceived = bytesDownloaded,
-                                TotalBytesToReceive = totalBytes,
-                                Speed = speed,
-                            });
+                            totalBytesToReceive = response.Content.Headers.ContentLength.Value + totalBytesDownloaded;
                         }
 
-                        stopwatch.Stop();
+                        using (Stream contentStream = await response.Content.ReadAsStreamAsync(cancellationToken),
+                            fileStream = new FileStream(destination, FileMode.Append, FileAccess.Write, FileShare.None, 8192, true))
+                        {
+                            byte[] buffer = new byte[8192];
+                            Stopwatch stopwatch = new Stopwatch();
+                            long previousBytesReceived = totalBytesDownloaded;
+
+                            int bytesRead;
+                            stopwatch.Start();
+
+                            while ((bytesRead = await contentStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+                            {
+                                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
+                                totalBytesDownloaded += bytesRead;
+
+                                // Measure elapsed time since last update
+                                double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
+
+                                if (secondsElapsed >= 1) // Update progress every second
+                                {
+                                    // Calculate download speed in KB/s
+                                    double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+
+                                    progress?.Report(new DownloadProgress
+                                    {
+                                        Percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0,
+                                        BytesReceived = totalBytesDownloaded,
+                                        TotalBytesToReceive = totalBytesToReceive,
+                                        Speed = speedInKbps, // Speed in KB/s
+                                    });
+
+                                    // Reset stopwatch and update previous bytes
+                                    previousBytesReceived = totalBytesDownloaded;
+                                    stopwatch.Restart();
+                                }
+                            }
+
+                        }
                     }
                 }
             }
@@ -61,18 +94,5 @@ namespace FileDownloader.ParallelProcessing.Services
                 MessageBox.Show($"An error occurred: {ex.Message}");
             }
         }
-
-
-
-        private float CalculateSpeed(long bytesReceived, Stopwatch stopwatch)
-        {
-            // Calculate speed in KB/s
-            if (stopwatch.Elapsed.TotalSeconds > 0)
-            {
-                return (long)(bytesReceived / 1024 / stopwatch.Elapsed.TotalSeconds); // Convert to KB/s
-            }
-            return 0;
-        }
-
     }
 }
