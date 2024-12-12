@@ -49,9 +49,12 @@ namespace FileDownloader.ParallelProcessing.Services
                             int bytesRead;
                             stopwatch.Start();
 
+
                             while ((bytesRead = await contentStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationTokenSource.Token)) > 0)
                             {
                                 await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationTokenSource.Token);
+
+                                // Update totalBytesDownloaded immediately after reading
                                 totalBytesDownloaded += bytesRead;
 
                                 // Calculate the percentage for immediate progress bar update
@@ -61,38 +64,24 @@ namespace FileDownloader.ParallelProcessing.Services
                                 double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
 
                                 // Calculate download speed in KB/s
-                                double speedInKbpsdelayed = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+                                double speedInKbps = secondsElapsed > 0 ? (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed : 0;
 
-                                // Immediately update the progress bar value
+                                // Report progress
                                 progress?.Report(new DownloadProgress
                                 {
                                     Percentage = percentage,
-                                    BytesReceived = totalBytesDownloaded, // Updated for completeness
-                                    TotalBytesToReceive = totalBytesToReceive, // Updated for completeness
-                                    Speed = speedInKbpsdelayed, // Speed is not updated here
+                                    BytesReceived = totalBytesDownloaded,
+                                    TotalBytesToReceive = totalBytesToReceive,
+                                    Speed = speedInKbps,
                                 });
-
 
                                 if (secondsElapsed >= 1) // Update speed and other properties every second
                                 {
-                                    // Calculate download speed in KB/s
-                                    double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
-
-                                    // Report full progress details
-                                    progress?.Report(new DownloadProgress
-                                    {
-                                        Percentage = percentage, // Percentage remains the same
-                                        BytesReceived = totalBytesDownloaded,
-                                        TotalBytesToReceive = totalBytesToReceive,
-                                        Speed = speedInKbps, // Speed in KB/s
-                                    });
-
                                     // Reset stopwatch and update previous bytes
                                     previousBytesReceived = totalBytesDownloaded;
                                     stopwatch.Restart();
                                 }
                             }
-
 
                         }
                     }
