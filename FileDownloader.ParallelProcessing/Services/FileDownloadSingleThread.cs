@@ -54,17 +54,34 @@ namespace FileDownloader.ParallelProcessing.Services
                                 await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationTokenSource.Token);
                                 totalBytesDownloaded += bytesRead;
 
-                                // Measure elapsed time since last update
+                                // Calculate the percentage for immediate progress bar update
+                                int percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0;
+
+                                // Measure elapsed time since the last speed update
                                 double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
 
-                                if (secondsElapsed >= 1) // Update progress every second
+                                // Calculate download speed in KB/s
+                                double speedInKbpsdelayed = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+
+                                // Immediately update the progress bar value
+                                progress?.Report(new DownloadProgress
+                                {
+                                    Percentage = percentage,
+                                    BytesReceived = totalBytesDownloaded, // Updated for completeness
+                                    TotalBytesToReceive = totalBytesToReceive, // Updated for completeness
+                                    Speed = speedInKbpsdelayed, // Speed is not updated here
+                                });
+
+
+                                if (secondsElapsed >= 1) // Update speed and other properties every second
                                 {
                                     // Calculate download speed in KB/s
                                     double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
 
+                                    // Report full progress details
                                     progress?.Report(new DownloadProgress
                                     {
-                                        Percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0,
+                                        Percentage = percentage, // Percentage remains the same
                                         BytesReceived = totalBytesDownloaded,
                                         TotalBytesToReceive = totalBytesToReceive,
                                         Speed = speedInKbps, // Speed in KB/s
@@ -75,6 +92,7 @@ namespace FileDownloader.ParallelProcessing.Services
                                     stopwatch.Restart();
                                 }
                             }
+
 
                         }
                     }
