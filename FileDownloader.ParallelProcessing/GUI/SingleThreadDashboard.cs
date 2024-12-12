@@ -40,7 +40,7 @@ namespace FileDownloader.ParallelProcessing
                 //await Task.Run(async () =>
                 //{
                   await youtubeDownloadSingleThread.DownloadVideo(url,progress,_cancellationTokenSource);
-                //}); 
+                //});
             }
             else
             {
@@ -100,7 +100,7 @@ namespace FileDownloader.ParallelProcessing
             {
                 if (button != null && result._cancellationTokenSource.Token != null)
                 {
-                    result._cancellationTokenSource?.Cancel(); // Trigger cancellation  
+                    result._cancellationTokenSource?.Cancel(); // Trigger cancellation
                     button.Enabled = false; // Disable the button
                     result._cancellationTokenSource?.Dispose();
                 }
@@ -115,8 +115,6 @@ namespace FileDownloader.ParallelProcessing
                 result.downloadpanel.Dispose();
                 RearrangePanels();
             }
-
-
         }
 
         private async void ResumeButton_Click(object sender, EventArgs e, Downloadpanel downloadpanel)

@@ -1,4 +1,5 @@
-﻿using FileDownloader.ParallelProcessing.Models;
+﻿using AngleSharp.Dom;
+using FileDownloader.ParallelProcessing.Models;
 using FileDownloader.ParallelProcessing.Services;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +24,7 @@ namespace FileDownloader.ParallelProcessing
         FileDownloadMultiThread downloader = new FileDownloadMultiThread();
         private readonly int MAX_NUMBER_OF_DOWNLOADS;
         private readonly SemaphoreSlim _semaphore;
+        CancellationTokenSource _cancellationTokenSource;
 
         public MultiThreadDashboard(int threadsNumbers)
         {
@@ -29,6 +32,7 @@ namespace FileDownloader.ParallelProcessing
             this.MAX_NUMBER_OF_DOWNLOADS = threadsNumbers;
             _semaphore = new SemaphoreSlim(MAX_NUMBER_OF_DOWNLOADS);
         }
+
         private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
         private async void DownloadButton_Click(object sender, EventArgs e)
         {
@@ -38,6 +42,7 @@ namespace FileDownloader.ParallelProcessing
                 return;
             }
 
+            string url = URLTextBox.Text.Trim();
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
             string destination = Path.Combine(LocationInput.Text, fileName);
             FileInfo file = new FileInfo(fileName);
@@ -57,23 +62,29 @@ namespace FileDownloader.ParallelProcessing
                 }
             }
 
+            _cancellationTokenSource = new CancellationTokenSource();
+            var _token = _cancellationTokenSource.Token;
+
+            var progress = CreateProgressReporter(file, url, destination);
+
             // Create a new download panel
-            var cts = new CancellationTokenSource();
-            Panel downloadPanel = CreateDownloadPanel(file, cts);
-            var fileNameLabel = (downloadPanel.Controls["FileNameValue"] as Label);
-            var progressBar = (downloadPanel.Controls["ProgressBar"] as ProgressBar);
-            var downloadedBytesLabel = (downloadPanel.Controls["DownloadedValue"] as Label);
-            var speedValue = (downloadPanel.Controls["SpeedValue"] as Label);
+            //var progress = new Progress<DownloadProgress>();
+            //var cts = new CancellationTokenSource();
+            //Downloadpanel downloadPanel = CreateDownloadPanel(file, cts,URLTextBox.Text, destination, progress);
+            //var fileNameLabel = (downloadPanel.downloadpanel.Controls["FileNameValue"] as Label);
+            //var progressBar = (downloadPanel.downloadpanel.Controls["ProgressBar"] as ProgressBar);
+            //var downloadedBytesLabel = (downloadPanel.downloadpanel.Controls["DownloadedValue"] as Label);
+            //var speedValue = (downloadPanel.downloadpanel.Controls["SpeedValue"] as Label);
 
             // Create a progress reporter
-            var progress = new Progress<DownloadProgress>(p =>
-            {
-                // Update the progress bar and other UI elements
-                progressBar.Value = p.Percentage;
-                fileNameLabel.Text = file.FileName;
-                downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
-                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
-            });
+            //progress = new Progress<DownloadProgress>(p =>
+            //{
+            //    // Update the progress bar and other UI elements
+            //    progressBar.Value = p.Percentage;
+            //    fileNameLabel.Text = file.FileName;
+            //    downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
+            //    speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
+            //});
 
             // Use semaphore to limit concurrent downloads
             await _semaphore.WaitAsync();
@@ -84,7 +95,7 @@ namespace FileDownloader.ParallelProcessing
                 {
                     try
                     {
-                        await downloader.DownloadFileAsync(URLTextBox.Text, destination, progress, cts.Token);
+                        await downloader.DownloadFileAsync(url, destination, progress, _token);
                     }
                     catch (OperationCanceledException)
                     {
@@ -103,7 +114,27 @@ namespace FileDownloader.ParallelProcessing
             }
         }
 
+        private IProgress<DownloadProgress> CreateProgressReporter(Models.FileInfo file, string url, string destination)
+        {
+            // Create a new download panel
+            Downloadpanel downloadPanel = CreateDownloadPanel(file, _cancellationTokenSource, url, destination, null);
+            var fileNameLabel = (downloadPanel.downloadpanel.Controls["FileNameValue"] as Label);
+            var progressBar = (downloadPanel.downloadpanel.Controls["ProgressBar"] as ProgressBar);
+            var downloadedBytesLabel = (downloadPanel.downloadpanel.Controls["DownloadedValue"] as Label);
+            var speedValue = (downloadPanel.downloadpanel.Controls["SpeedValue"] as Label);
 
+            // Create a progress reporter
+            var progress = new Progress<DownloadProgress>(p =>
+            {
+                // Update the progress bar and other UI elements
+                progressBar.Value = p.Percentage;
+                fileNameLabel.Text = file.FileName;
+                downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
+                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
+            });
+            downloadPanel.progress = progress;
+            return progress;
+        }
 
         private void SetLocationButton_Click(object sender, EventArgs e)
         {
@@ -116,15 +147,69 @@ namespace FileDownloader.ParallelProcessing
         }
 
 
-
-        private void URLTextBox_TextChanged(object sender, EventArgs e)
+        private void CancelButton_Click(object sender, EventArgs e, Downloadpanel result)
         {
+            Button? button = sender as Button;
+            try
+            {
+                if (button != null && result._cancellationTokenSource.Token != null)
+                {
+                    result._cancellationTokenSource?.Cancel(); // Trigger cancellation
+                    button.Enabled = false; // Disable the button
+                    result._cancellationTokenSource?.Dispose();
+                }
+            }
+            catch (ObjectDisposedException DE)
+            {
+                MessageBox.Show($"The Download was Cancelled", "cancellation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
+            }
+            finally
+            {
+                result.downloadpanel.Dispose();
+                RearrangePanels();
+            }
         }
-            
-        private void InstructionLabel_Click(object sender, EventArgs e)
+
+        private async void ResumeButton_Click(object sender, EventArgs e, Downloadpanel downloadpanel)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            downloadpanel._cancellationTokenSource = cts;
 
+            // Start the download
+            await Task.Run(async () =>
+            {
+                try
+                {
+                    await downloader.DownloadFileAsync(downloadpanel.URL, downloadpanel.Destination, downloadpanel.progress, cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    MessageBox.Show($"Download was canceled.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"An error occurred: {ex.Message}");
+                }
+            });
         }
+
+        private void PauseButton_Click(object sender, EventArgs e, Downloadpanel downloadpanel)
+        {
+            Button? PauseButton = sender as Button;
+            try
+            {
+                if (downloadpanel._cancellationTokenSource.Token != null && !downloadpanel._cancellationTokenSource.Token.IsCancellationRequested)
+                {
+                    downloadpanel._cancellationTokenSource.Cancel(); // Pause the download
+                    downloadpanel._cancellationTokenSource.Dispose();
+                }
+            }
+            catch (ObjectDisposedException DE)
+            {
+                MessageBox.Show($"An error occurred: The download is Already Cancelled", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }

@@ -122,7 +122,6 @@ namespace FileDownloader.ParallelProcessing
             InstructionLabel.Size = new Size(403, 23);
             InstructionLabel.TabIndex = 3;
             InstructionLabel.Text = "Please Enter the URL Link in the TextBox Below\r\n";
-            InstructionLabel.Click += InstructionLabel_Click;
             // 
             // URLTextBox
             // 
@@ -133,7 +132,6 @@ namespace FileDownloader.ParallelProcessing
             URLTextBox.PlaceholderText = "Example : https://dotnetexample/postman.exe";
             URLTextBox.Size = new Size(969, 27);
             URLTextBox.TabIndex = 1;
-            URLTextBox.TextChanged += URLTextBox_TextChanged;
             // 
             // URLLabel
             // 
@@ -259,8 +257,26 @@ namespace FileDownloader.ParallelProcessing
         private Button Resume;
         private Panel DownloadsContainer;
         private int _currentPanelYPosition = 15;
-        private Panel CreateDownloadPanel(FileInfo file,CancellationTokenSource cts)
+
+        private void RearrangePanels()
         {
+            int currentYPosition = 15; // Starting position for the first panel
+
+            foreach (Control panel in DownloadsContainer.Controls)
+            {
+                // Set the new position for each panel
+                panel.Location = new Point(panel.Location.X, currentYPosition);
+                currentYPosition += panel.Height + 10; // Add spacing between panels
+            }
+
+            // Reset the current Y position tracker
+            _currentPanelYPosition = currentYPosition;
+        }
+
+
+        private Downloadpanel CreateDownloadPanel(FileInfo file, CancellationTokenSource _cancellationTokenSource, string url, string destination, IProgress<DownloadProgress> progress)
+        {
+            Downloadpanel result = new Downloadpanel();
             DownloadPanel.Name = "DownloadPanel";
             DownloadPanel.TabIndex = 2;
             Panel downloadPanel = new Panel
@@ -363,6 +379,10 @@ namespace FileDownloader.ParallelProcessing
                 Text = "Resume",
                 UseVisualStyleBackColor = false
             };
+            ResumeButton.Click += (s, e) =>
+            {
+                ResumeButton_Click(s, e, result);
+            };
 
             Button CancelButton = new Button
             {
@@ -379,10 +399,7 @@ namespace FileDownloader.ParallelProcessing
 
             CancelButton.Click += (s, e) =>
             {
-                cts.Cancel(); // Cancel the task
-                cts.Dispose(); // to prevent memory leak
-                CancelButton.Enabled = false;
-
+                CancelButton_Click(s, e, result);
             };
 
             Button PauseButton = new Button
@@ -396,6 +413,11 @@ namespace FileDownloader.ParallelProcessing
                 TabIndex = 14,
                 Text = "Pause",
                 UseVisualStyleBackColor = false
+            };
+
+            PauseButton.Click += (s, e) =>
+            {
+                PauseButton_Click(s, e, result);
             };
 
 
@@ -414,10 +436,12 @@ namespace FileDownloader.ParallelProcessing
             DownloadsContainer.Controls.Add(downloadPanel);
             // 10 for spacing between panels
             _currentPanelYPosition += downloadPanel.Height + 10;
-            return downloadPanel;
+            result.downloadpanel = downloadPanel;
+            result.progress = progress;
+            result.URL = url;
+            result.Destination = destination;
+            result._cancellationTokenSource = _cancellationTokenSource;
+            return result;
         }
-
-
-
-        }
+    }
 }
