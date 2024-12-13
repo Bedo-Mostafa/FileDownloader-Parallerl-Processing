@@ -1,8 +1,4 @@
-﻿//using System;
-//using System.Collections.Concurrent;
-//using System.IO;
-//using System.Linq;
-//using System.Threading.Tasks;
+﻿//using System.Collections.Concurrent;
 //using YoutubeExplode;
 //using YoutubeExplode.Converter;
 //using YoutubeExplode.Videos.Streams;
@@ -24,7 +20,7 @@
 //            Task inputTask = Task.Run(() => CollectUrls());
 
 //            // Process downloads in parallel
-//            await ProcessDownloadsInParallel();
+//            await DownloadsVideosInParallel();
 
 //            // Wait for user input collection to complete
 //            await inputTask;
@@ -64,7 +60,7 @@
 //            }
 //        }
 
-//        private static async Task ProcessDownloadsInParallel()
+//        private static async Task DownloadsVideosInParallel()
 //        {
 //            var youtube = new YoutubeClient();
 //            const int MaxDegreeOfParallelism = 5; // Adjust based on your system's capability
