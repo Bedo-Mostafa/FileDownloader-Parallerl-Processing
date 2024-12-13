@@ -18,15 +18,15 @@ namespace FileDownloader.ParallelProcessing
         private async void DownloadButtonSingleThread(object sender, EventArgs e)
         {
             // Validation for browse
-            if (string.IsNullOrWhiteSpace(LocationInput.Text))
+            if (string.IsNullOrWhiteSpace(LocationInput.Text) || string.IsNullOrWhiteSpace(URLTextBox.Text))
             {
-                MessageBox.Show("Please select a destination folder.");
+                MessageBox.Show("Please select a destination folder or enter valid url.");
                 return;
             }
 
             string url = URLTextBox.Text.Trim();
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
-            string destination = Path.Combine(LocationInput.Text, fileName);
+            string destination = Path.Combine(LocationInput.Text);
             Models.FileInfo file = new Models.FileInfo(fileName);
 
             // clear the text box
@@ -42,20 +42,13 @@ namespace FileDownloader.ParallelProcessing
                 {
                     if (url.Contains("playlist", StringComparison.OrdinalIgnoreCase))
                     {
+                        SetVideoTitleAsync(url, downloadPanel, file);
                         await youtubeDownloadSingleThread.DownloadPlaylist(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
                     }
                     else
                     {
-                        var youtube = new YoutubeClient();
-
-                        // Get video details
-                        var video = await youtube.Videos.GetAsync(url);
-
-                        // Retrieve the video title
-                        string videoTitle = video.Title;
-
-                        downloadPanel.downloadpanel.Controls["FileNameValue"].Text = videoTitle;
-                        file.FileName = videoTitle;
+                        SetVideoTitleAsync(url, downloadPanel,file);
+                        await youtubeDownloadSingleThread.DownloadVideo(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
 
                     }
                 }
@@ -70,6 +63,7 @@ namespace FileDownloader.ParallelProcessing
             }
             else
             {
+                destination = Path.Combine(LocationInput.Text,fileName);
                 try
                 {
                     await fileDownloadSingleThread.DownloadFilesSequentiallyAsync(url, destination, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
@@ -102,6 +96,12 @@ namespace FileDownloader.ParallelProcessing
                 downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
                 speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
             });
+            // Disable Pause and resume buttons for youtubeVideos Download
+            if (IsValidYouTubeUrl(url))
+            {
+                downloadPanel.downloadpanel.Controls["Pause"].Enabled = false;
+                downloadPanel.downloadpanel.Controls["Resume"].Enabled = false;
+            }
             downloadPanel.progress = progress;
             return downloadPanel;
         }
@@ -174,5 +174,24 @@ namespace FileDownloader.ParallelProcessing
                 MessageBox.Show($"An error occurred: The download is Already Cancelled", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        public async Task SetVideoTitleAsync(string url, Downloadpanel downloadPanel,Models.FileInfo file)
+        {
+            // Initialize the YoutubeClient
+            var youtubeClient = new YoutubeClient();
+
+            // Get video details asynchronously
+            var video = await youtubeClient.Videos.GetAsync(url);
+
+            // Retrieve the video title
+            string videoTitle = video.Title;
+
+            // Update the UI with the video title
+            downloadPanel.downloadpanel.Controls["FileNameValue"].Text = videoTitle;
+
+            file.FileName = videoTitle;
+
+        }
+
     }
 }

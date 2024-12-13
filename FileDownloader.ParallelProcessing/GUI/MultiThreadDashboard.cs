@@ -1,6 +1,7 @@
 ﻿using FileDownloader.ParallelProcessing.Models;
 using FileDownloader.ParallelProcessing.Services;
 using System.Text.RegularExpressions;
+using YoutubeExplode;
 
 namespace FileDownloader.ParallelProcessing
 {
@@ -23,15 +24,15 @@ namespace FileDownloader.ParallelProcessing
         private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
         private async void DownloadButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(LocationInput.Text))
+            if (string.IsNullOrWhiteSpace(LocationInput.Text) || string.IsNullOrWhiteSpace(URLTextBox.Text))
             {
-                MessageBox.Show("Please select a destination folder.");
+                MessageBox.Show("Please select a destination folder or enter valid url.");
                 return;
             }
 
             string url = URLTextBox.Text.Trim();
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
-            string destination = Path.Combine(LocationInput.Text, fileName);
+            string destination = Path.Combine(LocationInput.Text);
             Models.FileInfo file = new Models.FileInfo(fileName);
 
             // Check if the file already exists and generate a new file name with a postfix
@@ -61,6 +62,7 @@ namespace FileDownloader.ParallelProcessing
                     {
                         foreach (var video in playlist)
                         {
+                            file.FileName = video.Title;
                             var DownloadContext = CreateDownloadContext(file, url, destination);
 
                             // Start the download
@@ -68,6 +70,7 @@ namespace FileDownloader.ParallelProcessing
                             {
                                 try
                                 {
+                                    //SetVideoTitleAsync(url, DownloadContext.downloadPanel, file);
                                     downloaderyoutube.DownloadVideoAsync(video.Url, destination, DownloadContext.progress, DownloadContext._cancellationTokenSource).WaitAsync(DownloadContext._token);
                                 }
                                 catch (OperationCanceledException)
@@ -119,6 +122,8 @@ namespace FileDownloader.ParallelProcessing
             }
             else
             {
+                destination = Path.Combine(LocationInput.Text,fileName);
+
                 var DownloadContext = CreateDownloadContext(file, url, destination);
 
                 try
@@ -155,7 +160,7 @@ namespace FileDownloader.ParallelProcessing
 
         public (CancellationTokenSource _cancellationTokenSource, CancellationToken _token, IProgress<DownloadProgress> progress) CreateDownloadContext(Models.FileInfo file, string url, string destination)
         {
-            var _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationTokenSource = new CancellationTokenSource();
             var _token = _cancellationTokenSource.Token;
             var progress = CreateProgressReporter(file, url, destination); // Assuming CreateProgressReporter is a valid method that returns an IProgress<DownloadProgress>
 
@@ -163,7 +168,7 @@ namespace FileDownloader.ParallelProcessing
         }
 
 
-        private IProgress<DownloadProgress> CreateProgressReporter(Models.FileInfo file, string url, string destination)
+        private IProgress<DownloadProgress>CreateProgressReporter(Models.FileInfo file, string url, string destination)
         {
             // Create a new download panel
             Downloadpanel downloadPanel = CreateDownloadPanel(file, _cancellationTokenSource, url, destination, null);
@@ -171,16 +176,29 @@ namespace FileDownloader.ParallelProcessing
             var progressBar = (downloadPanel.downloadpanel.Controls["ProgressBar"] as ProgressBar);
             var downloadedBytesLabel = (downloadPanel.downloadpanel.Controls["DownloadedValue"] as Label);
             var speedValue = (downloadPanel.downloadpanel.Controls["SpeedValue"] as Label);
-
+            string title = "";
+            if (IsValidYouTubeUrl(url) && !url.Contains("playlist", StringComparison.OrdinalIgnoreCase))
+            {
+                Task.Run(() =>
+                {
+                    title = SetVideoTitleAsync(url, downloadPanel).Result;
+                });
+            }
             // Create a progress reporter
             var progress = new Progress<DownloadProgress>(p =>
             {
                 // Update the progress bar and other UI elements
                 progressBar.Value = p.Percentage;
-                fileNameLabel.Text = file.FileName;
+                fileNameLabel.Text = title == ""? file.FileName:title;
                 downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
                 speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
             });
+            // Disable Pause and resume buttons for youtubeVideos Download
+            if (IsValidYouTubeUrl(url))
+            {
+                downloadPanel.downloadpanel.Controls["Pause"].Enabled = false;
+                downloadPanel.downloadpanel.Controls["Resume"].Enabled = false;
+            }
             downloadPanel.progress = progress;
             return progress;
         }
@@ -258,6 +276,20 @@ namespace FileDownloader.ParallelProcessing
             {
                 MessageBox.Show($"An error occurred: The download is Already Cancelled", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        public async Task<string> SetVideoTitleAsync(string url, Downloadpanel downloadPanel)
+        {
+            // Initialize the YoutubeClient
+            var youtubeClient = new YoutubeClient();
+
+            // Get video details asynchronously
+            var video = await youtubeClient.Videos.GetAsync(url);
+
+            // Retrieve the video title
+            string videoTitle = video.Title;
+
+            return videoTitle;
         }
 
     }
