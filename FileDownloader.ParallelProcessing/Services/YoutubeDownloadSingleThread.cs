@@ -8,8 +8,11 @@ namespace FileDownloader.ParallelProcessing.Services
 {
     internal class YoutubeDownloadSingleThread
     {
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+
         public async Task DownloadVideo(string videoUrl, string outputFolderPath, IProgress<DownloadProgress> progress, CancellationTokenSource cancellationTokenSource)
         {
+            await _semaphore.WaitAsync(); // Ensure one download at a time
             try
             {
                 var youtube = new YoutubeClient();
@@ -32,7 +35,7 @@ namespace FileDownloader.ParallelProcessing.Services
                     .OrderByDescending(s => s.VideoQuality.Label)
                     .FirstOrDefault();
 
-                //// Set up output folder
+                // Set up output folder
                 string outputFolder = outputFolderPath;
                 Directory.CreateDirectory(outputFolder);
 
@@ -50,12 +53,12 @@ namespace FileDownloader.ParallelProcessing.Services
                 var stopwatch = new System.Diagnostics.Stopwatch();
                 stopwatch.Start();
 
-                var progressDoubel = new Progress<double>(percentage =>
+                var progressDouble = new Progress<double>(percentage =>
                 {
                     // Calculate bytes downloaded based on percentage
                     double bytesDownloaded = percentage * totalBytesToReceive;
 
-                    // Calculate speed in KB/s (bytes difference over elapsed time)
+                    // Calculate speed in KB/s
                     double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
                     double speedInKbps = elapsedSeconds > 0
                         ? (bytesDownloaded - previousBytesDownloaded) / elapsedSeconds / 1024
@@ -64,19 +67,19 @@ namespace FileDownloader.ParallelProcessing.Services
                     // Report progress
                     progress?.Report(new DownloadProgress
                     {
-                        Percentage = (int)(percentage * 100) + 1, // Convert fractional percentage to 0-100 scale
+                        Percentage = (int)(percentage * 100)+1, // Convert fractional percentage to 0-100 scale
                         BytesReceived = (long)bytesDownloaded, // Convert to long
                         TotalBytesToReceive = totalBytesToReceive,
                         Speed = speedInKbps, // Speed in KB/s
                     });
 
-                    // Update the previous bytes downloaded and restart the stopwatch
+                    // Update previous bytes and restart stopwatch
                     previousBytesDownloaded = (long)bytesDownloaded;
                     stopwatch.Restart();
                 });
 
                 // Perform the download
-                await youtube.Videos.DownloadAsync(streamInfos, conversionRequest, progressDoubel, cancellationToken: cancellationTokenSource.Token);
+                await youtube.Videos.DownloadAsync(streamInfos, conversionRequest, progressDouble, cancellationToken: cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
@@ -85,6 +88,10 @@ namespace FileDownloader.ParallelProcessing.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+            finally
+            {
+                _semaphore.Release(); // Release semaphore
             }
         }
 
