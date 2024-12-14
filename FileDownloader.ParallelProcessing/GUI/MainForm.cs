@@ -20,8 +20,15 @@ namespace FileDownloader.ParallelProcessing
 
             if (MultiThreadFormInstance == null || MultiThreadFormInstance.IsDisposed)
             {
-                MultiThreadFormInstance = new MultiThreadDashboard(int.Parse(ThreadsNumberInput.Text));
-                MultiThreadFormInstance.Show();
+                if (ThreadsNumberInput.Text != "")
+                {
+                    MultiThreadFormInstance = new MultiThreadDashboard(int.Parse(ThreadsNumberInput.Text));
+                    MultiThreadFormInstance.Show();
+                }
+                else
+                {
+                    MessageBox.Show("Enter Threads Valid Number","Warning",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                }
             }
             else
             {
@@ -86,16 +93,28 @@ namespace FileDownloader.ParallelProcessing
             // Allow only digits and control keys (e.g., Backspace)
             if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
             {
-                e.Handled = true; // Block the input
+                e.Handled = true; // Block invalid input
             }
         }
 
         private void ThreadsNumberInput_Validating(object sender, CancelEventArgs e)
         {
-            if (!int.TryParse(ThreadsNumberInput.Text, out _))
+            // Allow program closure without validation if the input is empty
+            if (string.IsNullOrWhiteSpace(ThreadsNumberInput.Text)) return;
+
+            // Validate input
+            if ((!int.TryParse(ThreadsNumberInput.Text, out int threads) || threads < 1) && threads != 0)
             {
-                MessageBox.Show("Please enter a valid number.");
+                MessageBox.Show("Please enter a valid number greater than or equal to 1.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 e.Cancel = true; // Keep focus on the input
+                return;
+            }
+
+            // Terminate program if input is zero
+            if (threads == 0)
+            {
+                MessageBox.Show("Zero is not a valid thread count. The program will close.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
             }
         }
 
