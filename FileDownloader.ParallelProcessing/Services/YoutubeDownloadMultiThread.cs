@@ -49,7 +49,9 @@ namespace FileDownloader.ParallelProcessing.Services
 
                 // Ensure unique file name
                 string sanitizedTitle = string.Join("_", video.Title.Split(Path.GetInvalidFileNameChars()));
-                string outputFilePath = Path.Combine(outputFolderPath, $"{sanitizedTitle}.mp4");
+                string uniqueId = Guid.NewGuid().ToString(); // Generate a unique identifier
+                string outputFilePath = Path.Combine(outputFolderPath, $"{sanitizedTitle}_{uniqueId}.mp4");
+
 
                 // Prepare to download streams
                 var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
@@ -95,6 +97,10 @@ namespace FileDownloader.ParallelProcessing.Services
                     progressDouble,
                     cancellationToken: cancellationTokenSource.Token
                 );
+            }
+            catch (OperationCanceledException)
+            {
+                MessageBox.Show($"Download was canceled.");
             }
             catch (Exception)
             {

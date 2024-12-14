@@ -85,6 +85,11 @@ namespace FileDownloader.ParallelProcessing.Services
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+
             catch (Exception ex)
             {
                 MessageBox.Show($"An error occurred: {ex.Message}:", "Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
