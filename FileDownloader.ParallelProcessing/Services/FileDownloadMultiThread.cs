@@ -62,23 +62,23 @@ namespace FileDownloader.ParallelProcessing.Services
                                 // Measure elapsed time since last update
                                 double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
 
-                                if (secondsElapsed >= 1) // Update progress every second
+                                //if (secondsElapsed >= 1) // Update progress every second
+                                //{
+                                // Calculate download speed in KB/s
+                                double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+
+                                progress?.Report(new DownloadProgress
                                 {
-                                    // Calculate download speed in KB/s
-                                    double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+                                    Percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0,
+                                    BytesReceived = totalBytesDownloaded,
+                                    TotalBytesToReceive = totalBytesToReceive,
+                                    Speed = speedInKbps, // Speed in KB/s
+                                });
 
-                                    progress?.Report(new DownloadProgress
-                                    {
-                                        Percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0,
-                                        BytesReceived = totalBytesDownloaded,
-                                        TotalBytesToReceive = totalBytesToReceive,
-                                        Speed = speedInKbps, // Speed in KB/s
-                                    });
-
-                                    // Reset stopwatch and update previous bytes
-                                    previousBytesReceived = totalBytesDownloaded;
-                                    stopwatch.Restart();
-                                }
+                                // Reset stopwatch and update previous bytes
+                                previousBytesReceived = totalBytesDownloaded;
+                                stopwatch.Restart();
+                                //}
                             }
 
                         }

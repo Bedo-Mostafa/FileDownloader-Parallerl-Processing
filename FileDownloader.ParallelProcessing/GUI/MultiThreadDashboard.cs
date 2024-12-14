@@ -35,6 +35,9 @@ namespace FileDownloader.ParallelProcessing
             string destination = Path.Combine(LocationInput.Text);
             Models.FileInfo file = new Models.FileInfo(fileName);
 
+            // clear the text box
+            URLTextBox.Clear();
+
             // Check if the file already exists and generate a new file name with a postfix
             if (File.Exists(destination))
             {
@@ -101,7 +104,7 @@ namespace FileDownloader.ParallelProcessing
                         {
                             try
                             {
-                                await downloaderyoutube.DownloadVideoAsync(url, destination, DownloadContext.progress, DownloadContext._cancellationTokenSource);
+                                 downloaderyoutube.DownloadVideoAsync(url, destination, DownloadContext.progress, DownloadContext._cancellationTokenSource);
                             }
                             catch (OperationCanceledException)
                             {
@@ -133,7 +136,7 @@ namespace FileDownloader.ParallelProcessing
                     {
                         try
                         {
-                            await downloader.DownloadFileAsync(url, destination, DownloadContext.progress, DownloadContext._token);
+                             downloader.DownloadFileAsync(url, destination, DownloadContext.progress, DownloadContext._token);
                         }
                         catch (OperationCanceledException)
                         {
@@ -226,7 +229,7 @@ namespace FileDownloader.ParallelProcessing
                     result._cancellationTokenSource?.Dispose();
                 }
             }
-            catch (ObjectDisposedException DE)
+            catch (ObjectDisposedException)
             {
                 MessageBox.Show($"The Download was Cancelled", "cancellation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 

@@ -26,7 +26,7 @@ namespace FileDownloader.ParallelProcessing
 
             string url = URLTextBox.Text.Trim();
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
-            string destination = Path.Combine(LocationInput.Text);
+            string destination = Path.Combine(LocationInput.Text,fileName);
             Models.FileInfo file = new Models.FileInfo(fileName);
 
             // clear the text box
@@ -42,13 +42,17 @@ namespace FileDownloader.ParallelProcessing
                 {
                     if (url.Contains("playlist", StringComparison.OrdinalIgnoreCase))
                     {
-                        SetVideoTitleAsync(url, downloadPanel, file);
-                        await youtubeDownloadSingleThread.DownloadPlaylist(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
+                        YoutubeClient youtube = new YoutubeClient();
+
+                        var playlist = await youtube.Playlists.GetAsync(url);
+                        file.FileName = playlist.Title;
+                         SetVideoTitleAsync(url, downloadPanel, file);
+                         await youtubeDownloadSingleThread.DownloadPlaylist(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
                     }
                     else
                     {
                         SetVideoTitleAsync(url, downloadPanel,file);
-                        await youtubeDownloadSingleThread.DownloadVideo(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
+                         await youtubeDownloadSingleThread.DownloadVideo(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
 
                     }
                 }
@@ -63,7 +67,7 @@ namespace FileDownloader.ParallelProcessing
             }
             else
             {
-                destination = Path.Combine(LocationInput.Text,fileName);
+                //destination = Path.Combine(LocationInput.Text,fileName);
                 try
                 {
                     await fileDownloadSingleThread.DownloadFilesSequentiallyAsync(url, destination, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
@@ -147,15 +151,7 @@ namespace FileDownloader.ParallelProcessing
         {
             CancellationTokenSource cts = new CancellationTokenSource();
             downloadpanel._cancellationTokenSource = cts;
-
-            if (IsValidYouTubeUrl(downloadpanel.URL))
-            {
-                await youtubeDownloadSingleThread.DownloadVideo(downloadpanel.URL, downloadpanel.Destination, downloadpanel.progress, downloadpanel._cancellationTokenSource);
-            }
-            else
-            {
-                await fileDownloadSingleThread.DownloadFilesSequentiallyAsync(downloadpanel.URL, downloadpanel.Destination, downloadpanel.progress, downloadpanel._cancellationTokenSource);
-            }
+            await fileDownloadSingleThread.DownloadFilesSequentiallyAsync(downloadpanel.URL, downloadpanel.Destination, downloadpanel.progress, downloadpanel._cancellationTokenSource).WaitAsync(downloadpanel._cancellationTokenSource.Token);
         }
 
         private void PauseButton_Click(object sender, EventArgs e, Downloadpanel downloadpanel)
