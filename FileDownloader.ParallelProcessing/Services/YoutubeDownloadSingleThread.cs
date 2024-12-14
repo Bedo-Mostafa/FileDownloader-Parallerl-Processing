@@ -12,18 +12,15 @@ namespace FileDownloader.ParallelProcessing.Services
 
         public async Task DownloadVideo(string videoUrl, string outputFolderPath, IProgress<DownloadProgress> progress, CancellationTokenSource cancellationTokenSource)
         {
-            await _semaphore.WaitAsync(); // Ensure one download at a time
+            await _semaphore.WaitAsync();
             try
             {
                 var youtube = new YoutubeClient();
 
-                // Get video details
                 var video = await youtube.Videos.GetAsync(videoUrl);
 
-                // Get stream manifest
                 var streamManifest = await youtube.Videos.Streams.GetManifestAsync(videoUrl);
 
-                // Select best audio and video streams
                 var audioStreamInfo = streamManifest
                     .GetAudioStreams()
                     .Where(s => s.Container == Container.Mp4)
@@ -35,13 +32,11 @@ namespace FileDownloader.ParallelProcessing.Services
                     .OrderByDescending(s => s.VideoQuality.Label)
                     .FirstOrDefault();
 
-                // Set up output folder
                 string outputFolder = outputFolderPath;
                 Directory.CreateDirectory(outputFolder);
 
                 string outputFilePath = Path.Combine(outputFolder, $"{video.Title}.mp4");
 
-                // Prepare to download streams
                 var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
                 var conversionRequest = new ConversionRequestBuilder(outputFilePath).Build();
 
@@ -55,30 +50,25 @@ namespace FileDownloader.ParallelProcessing.Services
 
                 var progressDouble = new Progress<double>(percentage =>
                 {
-                    // Calculate bytes downloaded based on percentage
                     double bytesDownloaded = percentage * totalBytesToReceive;
 
-                    // Calculate speed in KB/s
                     double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
                     double speedInKbps = elapsedSeconds > 0
                         ? (bytesDownloaded - previousBytesDownloaded) / elapsedSeconds / 1024
                         : 0;
 
-                    // Report progress
                     progress?.Report(new DownloadProgress
                     {
-                        Percentage = (int)(percentage * 100)+1, // Convert fractional percentage to 0-100 scale
-                        BytesReceived = (long)bytesDownloaded, // Convert to long
+                        Percentage = (int)(percentage * 100) + 1,
+                        BytesReceived = (long)bytesDownloaded,
                         TotalBytesToReceive = totalBytesToReceive,
-                        Speed = speedInKbps, // Speed in KB/s
+                        Speed = speedInKbps,
                     });
 
-                    // Update previous bytes and restart stopwatch
                     previousBytesDownloaded = (long)bytesDownloaded;
                     stopwatch.Restart();
                 });
 
-                // Perform the download
                 await youtube.Videos.DownloadAsync(streamInfos, conversionRequest, progressDouble, cancellationToken: cancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
@@ -91,7 +81,7 @@ namespace FileDownloader.ParallelProcessing.Services
             }
             finally
             {
-                _semaphore.Release(); // Release semaphore
+                _semaphore.Release();
             }
         }
 
@@ -102,11 +92,9 @@ namespace FileDownloader.ParallelProcessing.Services
             {
                 var youtube = new YoutubeClient();
 
-                // Get playlist details
                 var playlist = await youtube.Playlists.GetAsync(playlistUrl);
                 var videos = await youtube.Playlists.GetVideosAsync(playlistUrl);
 
-                // Set up output folder
                 string outputFolder = Path.Combine(outputFolderPath, playlist.Title);
                 Directory.CreateDirectory(outputFolder);
 
@@ -114,10 +102,8 @@ namespace FileDownloader.ParallelProcessing.Services
                 {
                     try
                     {
-                        // Get stream manifest for the video
                         var streamManifest = await youtube.Videos.Streams.GetManifestAsync(video.Url);
 
-                        // Select best audio and video streams
                         var audioStreamInfo = streamManifest
                             .GetAudioStreams()
                             .Where(s => s.Container == Container.Mp4)
@@ -129,10 +115,8 @@ namespace FileDownloader.ParallelProcessing.Services
                             .OrderByDescending(s => s.VideoQuality.Label)
                             .FirstOrDefault();
 
-                        // Construct file path
                         string outputFilePath = Path.Combine(outputFolder, $"{video.Title}.mp4");
 
-                        // Prepare to download streams
                         var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
                         var conversionRequest = new ConversionRequestBuilder(outputFilePath).Build();
 
@@ -164,7 +148,6 @@ namespace FileDownloader.ParallelProcessing.Services
                             stopwatch.Restart();
                         });
 
-                        // Perform the download
                         await youtube.Videos.DownloadAsync(streamInfos, conversionRequest, progressDoubel, cancellationToken: cancellationTokenSource.Token);
                     }
                     catch (OperationCanceledException)

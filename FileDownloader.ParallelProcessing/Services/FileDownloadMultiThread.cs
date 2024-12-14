@@ -1,13 +1,5 @@
-﻿using FileDownloader.ParallelProcessing.Models;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using FileDownloader.ParallelProcessing.Models;
 
 namespace FileDownloader.ParallelProcessing.Services
 {
@@ -49,23 +41,18 @@ namespace FileDownloader.ParallelProcessing.Services
                         {
                             byte[] buffer = new byte[8192];
                             Stopwatch stopwatch = new Stopwatch();
-                            long previousBytesReceived = totalBytesDownloaded;
+                            stopwatch.Start();
 
                             int bytesRead;
-                            stopwatch.Start();
 
                             while ((bytesRead = await contentStream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
                             {
                                 await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
                                 totalBytesDownloaded += bytesRead;
 
-                                // Measure elapsed time since last update
+                                // Calculate elapsed time since download started
                                 double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
-
-                                //if (secondsElapsed >= 1) // Update progress every second
-                                //{
-                                // Calculate download speed in KB/s
-                                double speedInKbps = (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed;
+                                double speedInKbps = secondsElapsed > 0 ? totalBytesDownloaded / 1024.0 / secondsElapsed : 0;
 
                                 progress?.Report(new DownloadProgress
                                 {
@@ -74,13 +61,7 @@ namespace FileDownloader.ParallelProcessing.Services
                                     TotalBytesToReceive = totalBytesToReceive,
                                     Speed = speedInKbps, // Speed in KB/s
                                 });
-
-                                // Reset stopwatch and update previous bytes
-                                previousBytesReceived = totalBytesDownloaded;
-                                stopwatch.Restart();
-                                //}
                             }
-
                         }
                     }
                 }
@@ -89,7 +70,6 @@ namespace FileDownloader.ParallelProcessing.Services
             {
                 throw;
             }
-
             catch (Exception ex)
             {
                 MessageBox.Show($"An error occurred: {ex.Message}:", "Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);

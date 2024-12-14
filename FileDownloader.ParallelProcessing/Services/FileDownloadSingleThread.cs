@@ -9,7 +9,7 @@ namespace FileDownloader.ParallelProcessing.Services
 
         public async Task DownloadFilesSequentiallyAsync(string url, string destinationPath, IProgress<DownloadProgress> progress, CancellationTokenSource cancellationTokenSource)
         {
-            await _semaphore.WaitAsync(); // Acquire the semaphore
+            await _semaphore.WaitAsync();
             try
             {
                 long totalBytesToReceive = 0;
@@ -54,19 +54,14 @@ namespace FileDownloader.ParallelProcessing.Services
                             {
                                 await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationTokenSource.Token);
 
-                                // Update totalBytesDownloaded immediately after reading
                                 totalBytesDownloaded += bytesRead;
 
-                                // Calculate the percentage for immediate progress bar update
                                 int percentage = totalBytesToReceive > 0 ? (int)(totalBytesDownloaded * 100 / totalBytesToReceive) : 0;
 
-                                // Measure elapsed time since the last speed update
                                 double secondsElapsed = stopwatch.Elapsed.TotalSeconds;
 
-                                // Calculate download speed in KB/s
                                 double speedInKbps = secondsElapsed > 0 ? (totalBytesDownloaded - previousBytesReceived) / 1024.0 / secondsElapsed : 0;
 
-                                // Report progress
                                 progress?.Report(new DownloadProgress
                                 {
                                     Percentage = percentage,
@@ -77,7 +72,6 @@ namespace FileDownloader.ParallelProcessing.Services
 
                                 if (secondsElapsed >= 1) // Update speed and other properties every second
                                 {
-                                    // Reset stopwatch and update previous bytes
                                     previousBytesReceived = totalBytesDownloaded;
                                     stopwatch.Restart();
                                 }
@@ -97,7 +91,7 @@ namespace FileDownloader.ParallelProcessing.Services
             }
             finally
             {
-                _semaphore.Release(); // Release the semaphore
+                _semaphore.Release();
             }
         }
     }

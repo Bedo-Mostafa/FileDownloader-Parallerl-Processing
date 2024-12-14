@@ -1,6 +1,4 @@
-﻿//using FileDownloader.ParallelProcessing.Models;
-using FileDownloader.ParallelProcessing.Models;
-using DownloadItem = FileDownloader.ParallelProcessing.Models.DownloadItem;
+﻿using FileDownloader.ParallelProcessing.Models;
 
 namespace FileDownloader.ParallelProcessing
 {
