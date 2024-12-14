@@ -27,7 +27,7 @@ namespace FileDownloader.ParallelProcessing
             string url = URLTextBox.Text.Trim();
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
             string destination = Path.Combine(LocationInput.Text,fileName);
-            Models.FileInfo file = new Models.FileInfo(fileName);
+            Models.DownloadItem file = new Models.DownloadItem(fileName);
 
             // clear the text box
             URLTextBox.Clear();
@@ -46,12 +46,12 @@ namespace FileDownloader.ParallelProcessing
 
                         var playlist = await youtube.Playlists.GetAsync(url);
                         file.FileName = playlist.Title;
-                         SetVideoTitleAsync(url, downloadPanel, file);
+                         _ = SetVideoTitleAsync(url, downloadPanel, file);
                          await youtubeDownloadSingleThread.DownloadPlaylist(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
                     }
                     else
                     {
-                        SetVideoTitleAsync(url, downloadPanel,file);
+                        _ = SetVideoTitleAsync(url, downloadPanel,file);
                          await youtubeDownloadSingleThread.DownloadVideo(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
 
                     }
@@ -82,7 +82,7 @@ namespace FileDownloader.ParallelProcessing
                 }
             }
         }
-        private Downloadpanel CreateProgressReporter(Models.FileInfo file, string url, string destination)
+        private Downloadpanel CreateProgressReporter(Models.DownloadItem file, string url, string destination)
         {
             // Create a new download panel
             Downloadpanel downloadPanel = CreateDownloadPanel(file, _cancellationTokenSource, url, destination, null);
@@ -162,7 +162,7 @@ namespace FileDownloader.ParallelProcessing
                 if (downloadpanel._cancellationTokenSource.Token != null && !downloadpanel._cancellationTokenSource.Token.IsCancellationRequested)
                 {
                     downloadpanel._cancellationTokenSource.Cancel(); // Pause the download
-                    //downloadpanel._cancellationTokenSource.Dispose();
+                    downloadpanel._cancellationTokenSource.Dispose();
                 }
             }
             catch (ObjectDisposedException DE)
@@ -171,7 +171,7 @@ namespace FileDownloader.ParallelProcessing
             }
         }
 
-        public async Task SetVideoTitleAsync(string url, Downloadpanel downloadPanel,Models.FileInfo file)
+        public async Task SetVideoTitleAsync(string url, Downloadpanel downloadPanel,Models.DownloadItem file)
         {
             // Initialize the YoutubeClient
             var youtubeClient = new YoutubeClient();

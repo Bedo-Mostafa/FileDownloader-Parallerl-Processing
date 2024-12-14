@@ -9,172 +9,218 @@ namespace FileDownloader.ParallelProcessing
     {
 
         FileDownloadMultiThread downloader = new FileDownloadMultiThread();
-        YoutubeDownloadMultiThread downloaderyoutube = new YoutubeDownloadMultiThread();
-        private readonly int MAX_NUMBER_OF_DOWNLOADS;
+        YoutubeDownloadMultiThread downloaderYoutube = new YoutubeDownloadMultiThread();
         private readonly SemaphoreSlim _semaphore;
         CancellationTokenSource _cancellationTokenSource;
-
+        private static readonly object _fileNameLock = new object();
         public MultiThreadDashboard(int threadsNumbers)
         {
             InitializeComponent();
-            this.MAX_NUMBER_OF_DOWNLOADS = threadsNumbers;
-            _semaphore = new SemaphoreSlim(MAX_NUMBER_OF_DOWNLOADS);
+            _semaphore = new SemaphoreSlim(threadsNumbers);
         }
 
-        private readonly Dictionary<string, CancellationTokenSource> _cancellationTokens = new();
         private async void DownloadButton_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(LocationInput.Text) || string.IsNullOrWhiteSpace(URLTextBox.Text))
-            {
-                MessageBox.Show("Please select a destination folder or enter valid url.");
-                return;
-            }
+            if (IsEmptyInput(LocationInput.Text, URLTextBox.Text)) { return; }
 
             string url = URLTextBox.Text.Trim();
             string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
             string destination = Path.Combine(LocationInput.Text);
-            Models.FileInfo file = new Models.FileInfo(fileName);
+
+
+            string fileDownload = Path.Combine(LocationInput.Text, fileName);
+
+            fileDownload = CheckfileNamePostFix(fileName, destination, fileDownload);
 
             // clear the text box
             URLTextBox.Clear();
 
-            // Check if the file already exists and generate a new file name with a postfix
-            if (File.Exists(destination))
-            {
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-                string fileExtension = Path.GetExtension(fileName);
-                int counter = 1;
 
-                // Generate a unique file name with a postfix (e.g., fileName(1), fileName(2), ...)
-                while (File.Exists(destination))
-                {
-                    string newFileName = $"{fileNameWithoutExtension}({counter++}){fileExtension}";
-                    destination = Path.Combine(LocationInput.Text, newFileName);
-                }
-            }
-
-
-            // Use semaphore to limit concurrent downloads
-            await _semaphore.WaitAsync();
             if (IsValidYouTubeUrl(url))
             {
                 if (url.Contains("playlist", StringComparison.OrdinalIgnoreCase))
                 {
-                    var playlist = await downloaderyoutube.GetPlaylistVideos(url);
-                    try
-                    {
-                        foreach (var video in playlist)
-                        {
-                            file.FileName = video.Title;
-                            var DownloadContext = CreateDownloadContext(file, url, destination);
-
-                            // Start the download
-                            await Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    //SetVideoTitleAsync(url, DownloadContext.downloadPanel, file);
-                                    downloaderyoutube.DownloadVideoAsync(video.Url, destination, DownloadContext.progress, DownloadContext._cancellationTokenSource).WaitAsync(DownloadContext._token);
-                                }
-                                catch (OperationCanceledException)
-                                {
-                                    MessageBox.Show($"Download for {fileName} was canceled.");
-                                }
-                                catch (Exception ex)
-                                {
-                                    MessageBox.Show($"An error occurred: {ex.Message}");
-                                }
-                            });
-                        }
-                    }
-                    finally
-                    {
-                        _semaphore.Release();
-                    }
-
+                    await DownloadyoutubePlaylist(url, fileName, destination);
                 }
                 else
                 {
-                    var DownloadContext = CreateDownloadContext(file, url, destination);
-
-                    try
-                    {
-                        // Start the download
-                        await Task.Run(async () =>
-                        {
-                            try
-                            {
-                                 downloaderyoutube.DownloadVideoAsync(url, destination, DownloadContext.progress, DownloadContext._cancellationTokenSource);
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                MessageBox.Show($"Download for {fileName} was canceled.");
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"An error occurred: {ex.Message}");
-                            }
-                        }).WaitAsync(DownloadContext._token);
-                    }
-                    finally
-                    {
-                        // Release semaphore after download is complete
-                        _semaphore.Release();
-                    }
+                    await DownloadyoutubeVideo(url, fileName, destination);
                 }
             }
             else
             {
-                destination = Path.Combine(LocationInput.Text,fileName);
-
-                var DownloadContext = CreateDownloadContext(file, url, destination);
-
-                try
-                {
-                    // Start the download
-                    await Task.Run(async () =>
-                    {
-                        try
-                        {
-                             downloader.DownloadFileAsync(url, destination, DownloadContext.progress, DownloadContext._token);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            MessageBox.Show($"Download for {fileName} was canceled.");
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"An error occurred: {ex.Message}");
-                        }
-                    }).WaitAsync(DownloadContext._token);
-                }
-                finally
-                {
-                    // Release semaphore after download is complete
-                    _semaphore.Release();
-                }
+                await DownloadFile(url, fileName, destination, fileDownload);
             }
         }
+
+        private async Task DownloadFile(string url, string fileName, string destination, string fileDownload)
+        {
+            //destination = Path.Combine(LocationInput.Text, fileName);
+
+            var DownloadContext = CreateDownloadContext(fileName, url, fileDownload);
+            //DownloadContext.
+            try
+            {
+                // Use semaphore to limit concurrent downloads
+                await _semaphore.WaitAsync();
+                // Start the download
+                try
+                {
+                    await Task.Run(async () =>
+                    {
+                        await downloader.DownloadFileAsync(url, fileDownload, DownloadContext.downloadpanel.progress, DownloadContext._token).WaitAsync(DownloadContext._token);
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    MessageBox.Show($"Download for {fileName} was canceled.");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"An error occurred: {ex.Message}");
+                }
+            }
+            finally
+            {
+                // Release semaphore after download is complete
+                _semaphore.Release();
+            }
+        }
+
+        private async Task DownloadyoutubeVideo(string url, string fileName, string destination)
+        {
+            var DownloadContext = CreateDownloadContext(fileName, url, destination);
+
+            try
+            {
+                // Use semaphore to limit concurrent downloads
+                await _semaphore.WaitAsync();
+                // Start the download
+                await Task.Run(async () =>
+                {
+                    try
+                    {
+                        await downloaderYoutube.DownloadVideoAsync(url, destination, DownloadContext.downloadpanel.progress, DownloadContext._cancellationTokenSource);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        MessageBox.Show($"Download for {fileName} was canceled.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"An error occurred: {ex.Message}");
+                    }
+                });
+            }
+            finally
+            {
+                // Release semaphore after download is complete
+                _semaphore.Release();
+            }
+        }
+
+        private async Task DownloadyoutubePlaylist(string url, string fileName, string destination)
+        {
+            var playlist = await downloaderYoutube.GetPlaylistVideos(url);
+
+            // Create a list to store file.FileName and DownloadContext
+            var downloadList = new List<DownloadItem>();
+
+            foreach (var video in playlist)
+            {
+                //file.FileName = ;
+                var DownloadContext = CreateDownloadContext(fileName, url, destination);
+                // Add a new DownloadItem to the list
+                downloadList.Add(new DownloadItem
+                {
+                    FileName = video.Title,
+                    VideoUrl = video.Url,
+                    CancellationTokenSource = DownloadContext._cancellationTokenSource,
+                    Token = DownloadContext._token,
+                    Progress = DownloadContext.downloadpanel.progress
+                });
+            }
+
+            for (int i = 0; i < downloadList.Count; i++)
+            {
+                // Capture the current index and item to avoid closure issues in the async block
+                var downloadItem = downloadList[i];
+
+                await _semaphore.WaitAsync();
+                // Start the download
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await downloaderYoutube
+                        .DownloadVideoAsync(downloadItem.VideoUrl, destination, downloadItem.Progress, downloadItem.CancellationTokenSource)
+                        .WaitAsync(downloadItem.CancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        MessageBox.Show($"Download for {fileName} was canceled.");
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"An error occurred: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                    }
+                });
+            }
+        }
+
+        private string CheckfileNamePostFix(string fileName, string destination, string fileDownload)
+        {
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            string fileExtension = Path.GetExtension(fileName);
+
+            // Generate a unique code using the current timestamp
+            string uniqueCode = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"); // Format ensures high precision
+            string newFileName = $"{fileNameWithoutExtension}_{uniqueCode}{fileExtension}";
+            string newFileDownload = Path.Combine(destination, newFileName);
+
+            // Ensure the file name is unique
+            while (File.Exists(newFileDownload))
+            {
+                uniqueCode = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"); // Regenerate timestamp if necessary
+                newFileName = $"{fileNameWithoutExtension}_{uniqueCode}{fileExtension}";
+                newFileDownload = Path.Combine(destination, newFileName);
+            }
+            return newFileDownload;
+        }
+
+        private bool IsEmptyInput(string location, string url)
+        {
+            if (string.IsNullOrWhiteSpace(location) || string.IsNullOrWhiteSpace(url))
+            {
+                MessageBox.Show("Please select a destination folder or enter valid url.");
+                return true;
+            }
+            return false;
+        }
+
         private bool IsValidYouTubeUrl(string url)
         {
             var youtubeUrlPattern = @"^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$";
             return Regex.IsMatch(url, youtubeUrlPattern);
         }
 
-        public (CancellationTokenSource _cancellationTokenSource, CancellationToken _token, IProgress<DownloadProgress> progress) CreateDownloadContext(Models.FileInfo file, string url, string destination)
+        public (CancellationTokenSource _cancellationTokenSource, CancellationToken _token, Downloadpanel downloadpanel) CreateDownloadContext(string fileName, string url, string destination)
         {
             _cancellationTokenSource = new CancellationTokenSource();
             var _token = _cancellationTokenSource.Token;
-            var progress = CreateProgressReporter(file, url, destination); // Assuming CreateProgressReporter is a valid method that returns an IProgress<DownloadProgress>
+            var progress = CreateProgressReporter(fileName, url, destination); // Assuming CreateProgressReporter is a valid method that returns an IProgress<DownloadProgress>
 
             return (_cancellationTokenSource, _token, progress); // Return a tuple containing the necessary values
         }
 
-
-        private IProgress<DownloadProgress>CreateProgressReporter(Models.FileInfo file, string url, string destination)
+        private Downloadpanel CreateProgressReporter(string fileName, string url, string destination)
         {
             // Create a new download panel
-            Downloadpanel downloadPanel = CreateDownloadPanel(file, _cancellationTokenSource, url, destination, null);
+            Downloadpanel downloadPanel = CreateDownloadPanel(fileName, _cancellationTokenSource, url, destination, null);
             var fileNameLabel = (downloadPanel.downloadpanel.Controls["FileNameValue"] as Label);
             var progressBar = (downloadPanel.downloadpanel.Controls["ProgressBar"] as ProgressBar);
             var downloadedBytesLabel = (downloadPanel.downloadpanel.Controls["DownloadedValue"] as Label);
@@ -192,7 +238,7 @@ namespace FileDownloader.ParallelProcessing
             {
                 // Update the progress bar and other UI elements
                 progressBar.Value = p.Percentage;
-                fileNameLabel.Text = title == ""? file.FileName:title;
+                fileNameLabel.Text = title == "" ? fileName : title;
                 downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
                 speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
             });
@@ -203,7 +249,9 @@ namespace FileDownloader.ParallelProcessing
                 downloadPanel.downloadpanel.Controls["Resume"].Enabled = false;
             }
             downloadPanel.progress = progress;
-            return progress;
+            downloadPanel.Destination = destination;
+
+            return downloadPanel;
         }
 
         private void SetLocationButton_Click(object sender, EventArgs e)
@@ -216,7 +264,6 @@ namespace FileDownloader.ParallelProcessing
 
         }
 
-
         private void CancelButton_Click(object sender, EventArgs e, Downloadpanel result)
         {
             Button? button = sender as Button;
@@ -228,11 +275,6 @@ namespace FileDownloader.ParallelProcessing
                     button.Enabled = false; // Disable the button
                     result._cancellationTokenSource?.Dispose();
                 }
-            }
-            catch (ObjectDisposedException)
-            {
-                MessageBox.Show($"The Download was Cancelled", "cancellation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
             }
             finally
             {
@@ -294,6 +336,5 @@ namespace FileDownloader.ParallelProcessing
 
             return videoTitle;
         }
-
     }
 }
