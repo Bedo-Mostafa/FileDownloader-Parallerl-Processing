@@ -1,19 +1,14 @@
-﻿using AngleSharp.Dom;
-using FileDownloader.ParallelProcessing.Models;
-using System.Collections.Concurrent;
+﻿using FileDownloader.ParallelProcessing.Models;
 using YoutubeExplode;
 using YoutubeExplode.Common;
 using YoutubeExplode.Converter;
 using YoutubeExplode.Playlists;
-using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
 namespace FileDownloader.ParallelProcessing.Services
 {
     public class YoutubeDownloadMultiThread
     {
-        private static readonly ConcurrentDictionary<string, bool> DownloadedVideos = new ConcurrentDictionary<string, bool>();
-        private static readonly BlockingCollection<string> DownloadQueue = new BlockingCollection<string>();
         private static readonly object ConsoleLock = new object();
 
         public async Task DownloadVideoAsync(string videoUrl, string outputFolderPath, IProgress<DownloadProgress> progress, CancellationTokenSource cancellationTokenSource)
@@ -49,11 +44,10 @@ namespace FileDownloader.ParallelProcessing.Services
 
                 // Ensure unique file name
                 string sanitizedTitle = string.Join("_", video.Title.Split(Path.GetInvalidFileNameChars()));
-                string uniqueId = Guid.NewGuid().ToString(); // Generate a unique identifier
+                string uniqueId = Guid.NewGuid().ToString();
                 string outputFilePath = Path.Combine(outputFolderPath, $"{sanitizedTitle}_{uniqueId}.mp4");
 
 
-                // Prepare to download streams
                 var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
                 var conversionRequest = new ConversionRequestBuilder(outputFilePath).Build();
 
@@ -67,22 +61,19 @@ namespace FileDownloader.ParallelProcessing.Services
 
                 var progressDouble = new Progress<double>(percentage =>
                 {
-                    // Calculate bytes downloaded based on percentage
                     double bytesDownloaded = percentage * totalBytesToReceive;
 
-                    // Calculate speed in KB/s (bytes difference over elapsed time)
                     double elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
                     double speedInKbps = elapsedSeconds > 0
                         ? (bytesDownloaded - previousBytesDownloaded) / elapsedSeconds / 1024
                         : 0;
 
-                    // Report progress
                     progress?.Report(new DownloadProgress
                     {
                         Percentage = (int)(percentage * 100) + 1, // Convert fractional percentage to 0-100 scale
-                        BytesReceived = (long)bytesDownloaded, // Convert to long
+                        BytesReceived = (long)bytesDownloaded,
                         TotalBytesToReceive = totalBytesToReceive,
-                        Speed = speedInKbps, // Speed in KB/s
+                        Speed = speedInKbps,
                     });
 
                     // Update the previous bytes downloaded and restart the stopwatch
@@ -90,7 +81,6 @@ namespace FileDownloader.ParallelProcessing.Services
                     stopwatch.Restart();
                 });
 
-                // Perform the download
                 await youtube.Videos.DownloadAsync(
                     streamInfos,
                     conversionRequest,
@@ -111,7 +101,7 @@ namespace FileDownloader.ParallelProcessing.Services
         public async Task<List<PlaylistVideo>> GetPlaylistVideos(string playlistUrl)
         {
             var youtube = new YoutubeClient();
-            var videoList = new List<PlaylistVideo>(); // List to store video details
+            var videoList = new List<PlaylistVideo>();
 
             try
             {
@@ -119,21 +109,20 @@ namespace FileDownloader.ParallelProcessing.Services
                 var playlist = await youtube.Playlists.GetAsync(playlistUrl);
                 var playlistVideos = await youtube.Playlists.GetVideosAsync(playlist.Id);
 
-                // Add each video to the list
                 foreach (var video in playlistVideos)
                 {
-                    videoList.Add(video); // Add video to the list of videos
+                    videoList.Add(video);
                 }
             }
             catch (Exception ex)
             {
                 lock (ConsoleLock)
                 {
-                    Console.WriteLine($"Error processing playlist {playlistUrl}: {ex.Message}");
+                    MessageBox.Show($"Error processing playlist {playlistUrl}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
 
-            return videoList; // Return the list of videos
+            return videoList;
         }
     }
 }

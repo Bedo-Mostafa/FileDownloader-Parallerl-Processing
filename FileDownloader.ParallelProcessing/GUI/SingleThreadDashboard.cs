@@ -31,11 +31,11 @@ namespace FileDownloader.ParallelProcessing
 
             // clear the text box
             URLTextBox.Clear();
+
             _cancellationTokenSource = new CancellationTokenSource();
             var _token = _cancellationTokenSource.Token;
 
             var downloadPanel = CreateProgressReporter(file, url, destination);
-            // Validate YouTube URL format
             if (IsValidYouTubeUrl(url))
             {
                 try
@@ -67,7 +67,6 @@ namespace FileDownloader.ParallelProcessing
             }
             else
             {
-                //destination = Path.Combine(LocationInput.Text,fileName);
                 try
                 {
                     await fileDownloadSingleThread.DownloadFilesSequentiallyAsync(url, destination, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
@@ -84,21 +83,18 @@ namespace FileDownloader.ParallelProcessing
         }
         private Downloadpanel CreateProgressReporter(Models.DownloadItem file, string url, string destination)
         {
-            // Create a new download panel
             Downloadpanel downloadPanel = CreateDownloadPanel(file, _cancellationTokenSource, url, destination, null);
             var fileNameLabel = (downloadPanel.downloadpanel.Controls["FileNameValue"] as Label);
             var progressBar = (downloadPanel.downloadpanel.Controls["ProgressBar"] as ProgressBar);
             var downloadedBytesLabel = (downloadPanel.downloadpanel.Controls["DownloadedValue"] as Label);
             var speedValue = (downloadPanel.downloadpanel.Controls["SpeedValue"] as Label);
 
-            // Create a progress reporter
             var progress = new Progress<DownloadProgress>(p =>
             {
-                // Update the progress bar and other UI elements
                 progressBar.Value = p.Percentage;
                 fileNameLabel.Text = file.FileName;
                 downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
-                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
+                speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s";
             });
             // Disable Pause and resume buttons for youtubeVideos Download
             if (IsValidYouTubeUrl(url))
@@ -173,16 +169,12 @@ namespace FileDownloader.ParallelProcessing
 
         public async Task SetVideoTitleAsync(string url, Downloadpanel downloadPanel,Models.DownloadItem file)
         {
-            // Initialize the YoutubeClient
             var youtubeClient = new YoutubeClient();
 
-            // Get video details asynchronously
             var video = await youtubeClient.Videos.GetAsync(url);
 
-            // Retrieve the video title
             string videoTitle = video.Title;
 
-            // Update the UI with the video title
             downloadPanel.downloadpanel.Controls["FileNameValue"].Text = videoTitle;
 
             file.FileName = videoTitle;

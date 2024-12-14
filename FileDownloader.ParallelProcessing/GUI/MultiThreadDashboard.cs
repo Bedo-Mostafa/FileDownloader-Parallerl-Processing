@@ -12,7 +12,6 @@ namespace FileDownloader.ParallelProcessing
         YoutubeDownloadMultiThread downloaderYoutube = new YoutubeDownloadMultiThread();
         private readonly SemaphoreSlim _semaphore;
         CancellationTokenSource _cancellationTokenSource;
-        private static readonly object _fileNameLock = new object();
         public MultiThreadDashboard(int threadsNumbers)
         {
             InitializeComponent();
@@ -55,15 +54,11 @@ namespace FileDownloader.ParallelProcessing
 
         private async Task DownloadFile(string url, string fileName, string destination, string fileDownload)
         {
-            //destination = Path.Combine(LocationInput.Text, fileName);
 
             var DownloadContext = CreateDownloadContext(fileName, url, fileDownload);
-            //DownloadContext.
             try
             {
-                // Use semaphore to limit concurrent downloads
                 await _semaphore.WaitAsync();
-                // Start the download
                 try
                 {
                     await Task.Run(async () =>
@@ -82,7 +77,6 @@ namespace FileDownloader.ParallelProcessing
             }
             finally
             {
-                // Release semaphore after download is complete
                 _semaphore.Release();
             }
         }
@@ -95,7 +89,6 @@ namespace FileDownloader.ParallelProcessing
             {
                 // Use semaphore to limit concurrent downloads
                 await _semaphore.WaitAsync();
-                // Start the download
                 await Task.Run(async () =>
                 {
                     try
@@ -114,7 +107,6 @@ namespace FileDownloader.ParallelProcessing
             }
             finally
             {
-                // Release semaphore after download is complete
                 _semaphore.Release();
             }
         }
@@ -123,12 +115,10 @@ namespace FileDownloader.ParallelProcessing
         {
             var playlist = await downloaderYoutube.GetPlaylistVideos(url);
 
-            // Create a list to store file.FileName and DownloadContext
             var downloadList = new List<DownloadItem>();
 
             foreach (var video in playlist)
             {
-                //file.FileName = ;
                 var DownloadContext = CreateDownloadContext(fileName, url, destination);
                 // Add a new DownloadItem to the list
                 downloadList.Add(new DownloadItem
@@ -143,11 +133,9 @@ namespace FileDownloader.ParallelProcessing
 
             for (int i = 0; i < downloadList.Count; i++)
             {
-                // Capture the current index and item to avoid closure issues in the async block
                 var downloadItem = downloadList[i];
 
                 await _semaphore.WaitAsync();
-                // Start the download
                 _ = Task.Run(async () =>
                 {
                     try
@@ -177,7 +165,6 @@ namespace FileDownloader.ParallelProcessing
             string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
             string fileExtension = Path.GetExtension(fileName);
 
-            // Generate a unique code using the current timestamp
             string uniqueCode = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"); // Format ensures high precision
             string newFileName = $"{fileNameWithoutExtension}_{uniqueCode}{fileExtension}";
             string newFileDownload = Path.Combine(destination, newFileName);
@@ -233,7 +220,6 @@ namespace FileDownloader.ParallelProcessing
                     title = SetVideoTitleAsync(url, downloadPanel).Result;
                 });
             }
-            // Create a progress reporter
             var progress = new Progress<DownloadProgress>(p =>
             {
                 // Update the progress bar and other UI elements
@@ -242,7 +228,6 @@ namespace FileDownloader.ParallelProcessing
                 downloadedBytesLabel.Text = $"{p.BytesReceived / (1024 * 1024)} MB / {p.TotalBytesToReceive / (1024 * 1024)} MB";
                 speedValue.Text = $"{(p.Speed / 1024.0):F2} MB/s"; // Display speed in MB/s with 2 decimal places
             });
-            // Disable Pause and resume buttons for youtubeVideos Download
             if (IsValidYouTubeUrl(url))
             {
                 downloadPanel.downloadpanel.Controls["Pause"].Enabled = false;
@@ -325,7 +310,7 @@ namespace FileDownloader.ParallelProcessing
 
         public async Task<string> SetVideoTitleAsync(string url, Downloadpanel downloadPanel)
         {
-            // Initialize the YoutubeClient
+
             var youtubeClient = new YoutubeClient();
 
             // Get video details asynchronously
