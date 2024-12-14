@@ -1,6 +1,6 @@
 ﻿//using FileDownloader.ParallelProcessing.Models;
 using FileDownloader.ParallelProcessing.Models;
-using FileInfo = FileDownloader.ParallelProcessing.Models.FileInfo;
+using DownloadItem = FileDownloader.ParallelProcessing.Models.DownloadItem;
 
 namespace FileDownloader.ParallelProcessing
 {
@@ -274,7 +274,7 @@ namespace FileDownloader.ParallelProcessing
         }
 
 
-        private Downloadpanel CreateDownloadPanel(FileInfo file, CancellationTokenSource _cancellationTokenSource, string url, string destination, IProgress<DownloadProgress> progress)
+        private Downloadpanel CreateDownloadPanel(string fileName, CancellationTokenSource _cancellationTokenSource, string url, string destination, IProgress<DownloadProgress> progress)
         {
             Downloadpanel result = new Downloadpanel();
             DownloadPanel.Name = "DownloadPanel";
@@ -295,7 +295,7 @@ namespace FileDownloader.ParallelProcessing
                 Name = "FileNameValue",
                 Size = new Size(39, 28),
                 TabIndex = 8,
-                Text = file.FileName
+                Text = fileName
             };
 
             Label FileNameLabel = new Label

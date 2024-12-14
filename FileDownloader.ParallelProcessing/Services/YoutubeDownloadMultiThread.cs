@@ -95,16 +95,10 @@ namespace FileDownloader.ParallelProcessing.Services
                     progressDouble,
                     cancellationToken: cancellationTokenSource.Token
                 );
-
-                Console.WriteLine($"Download completed: {video.Title}");
             }
-            catch (OperationCanceledException)
+            catch (Exception)
             {
-                Console.WriteLine("Download paused or canceled.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error downloading {videoUrl}: {ex.Message}");
+                MessageBox.Show($"Error downloading {videoUrl}:", "Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
             }
         }
 

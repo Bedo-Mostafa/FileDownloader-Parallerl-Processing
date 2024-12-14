@@ -85,13 +85,9 @@ namespace FileDownloader.ParallelProcessing.Services
                     }
                 }
             }
-            catch (OperationCanceledException)
-            {
-                MessageBox.Show("Download was canceled.");
-            }
             catch (Exception ex)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}");
+                MessageBox.Show($"An error occurred: {ex.Message}:", "Error", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
             }
         }
     }
