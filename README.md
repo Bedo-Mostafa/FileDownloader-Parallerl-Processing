@@ -5,7 +5,7 @@ This project focuses on implementing a file downloader with parallel processing 
 ## Main Features
 
 - **Parallel Processing**: Implements a file downloader using parallel processing to improve download speed and efficiency.
-- **Console Application Interface**: Provides an easy-to-use console application for user interaction.
+- **Application Interface**: Provides an easy-to-use GUI for user interaction.
 - **Multi-Source Support**: Includes support for downloading files from various sources, including YouTube.
 - **Asynchronous Programming**: Utilizes asynchronous programming techniques to enhance performance.
 
