@@ -27,7 +27,7 @@ namespace FileDownloader.ParallelProcessing
                 }
                 else
                 {
-                    MessageBox.Show("Enter Threads Valid Number","Warning",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    MessageBox.Show("Enter Threads Valid Number", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             else
@@ -36,18 +36,9 @@ namespace FileDownloader.ParallelProcessing
             }
         }
 
-        private void SingleThreadButtonClick(object sender, EventArgs e)
-        {
-
-        }
-
         #endregion
 
         #region Labels
-        private void MultipleThreadLabelClick(object sender, EventArgs e)
-        {
-
-        }
         private void SingleThreadLabelClick(object sender, EventArgs e)
         {
             // To Check Only 1 Instance Of the Downloader is Opened
@@ -62,32 +53,7 @@ namespace FileDownloader.ParallelProcessing
                 SingleThreadFormInstance.BringToFront();
             }
         }
-
-        private void MultiThreadNoteLabelClick(object sender, EventArgs e)
-        {
-
-        }
-
-        private void ProjectTitleClick(object sender, EventArgs e)
-        {
-
-        }
-        private void NoteLabelClick(object sender, EventArgs e)
-        {
-
-        }
         #endregion
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void ThreadsNumberInput_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Allow only digits and control keys (e.g., Backspace)
@@ -116,11 +82,6 @@ namespace FileDownloader.ParallelProcessing
                 MessageBox.Show("Zero is not a valid thread count. The program will close.", "Invalid Input", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Application.Exit();
             }
-        }
-
-        private void ThreadsNumberInput_TextChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

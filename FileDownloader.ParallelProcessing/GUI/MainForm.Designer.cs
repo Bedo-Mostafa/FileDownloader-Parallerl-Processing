@@ -61,7 +61,6 @@
             MultiThreadLabel.Size = new Size(120, 20);
             MultiThreadLabel.TabIndex = 1;
             MultiThreadLabel.Text = "Multiple Threads";
-            MultiThreadLabel.Click += MultipleThreadLabelClick;
             // 
             // SingleThreadButton
             // 
@@ -87,7 +86,6 @@
             MultiThreadNoteLabel.Size = new Size(399, 23);
             MultiThreadNoteLabel.TabIndex = 4;
             MultiThreadNoteLabel.Text = "You Will be able to download Multiple Files here";
-            MultiThreadNoteLabel.Click += MultiThreadNoteLabelClick;
             // 
             // ProjectTitle
             // 
@@ -99,7 +97,6 @@
             ProjectTitle.Size = new Size(248, 41);
             ProjectTitle.TabIndex = 5;
             ProjectTitle.Text = "File Downloader";
-            ProjectTitle.Click += ProjectTitleClick;
             // 
             // SingleThreadLabel
             // 
@@ -123,7 +120,6 @@
             NoteLabel.Size = new Size(392, 23);
             NoteLabel.TabIndex = 7;
             NoteLabel.Text = "You Can Download Files from any Button Below";
-            NoteLabel.Click += NoteLabelClick;
             // 
             // ThreadsNumberInput
             // 
@@ -135,7 +131,6 @@
             ThreadsNumberInput.Size = new Size(42, 27);
             ThreadsNumberInput.TabIndex = 8;
             ThreadsNumberInput.Text = "5";
-            ThreadsNumberInput.TextChanged += ThreadsNumberInput_TextChanged;
             ThreadsNumberInput.KeyPress += ThreadsNumberInput_KeyPress;
             ThreadsNumberInput.Validating += ThreadsNumberInput_Validating;
             // 
@@ -151,7 +146,6 @@
             label1.Size = new Size(536, 48);
             label1.TabIndex = 9;
             label1.Text = "Enter the number of threads you want to \r\nuse (if you don't understand it just ignore it) by default is 5\r\n";
-            label1.Click += label1_Click;
             // 
             // MainForm
             // 
