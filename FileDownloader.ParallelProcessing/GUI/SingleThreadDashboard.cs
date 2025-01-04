@@ -17,17 +17,29 @@ namespace FileDownloader.ParallelProcessing
 
         private async void DownloadButtonSingleThread(object sender, EventArgs e)
         {
+            string url = string.Empty;
+            string fileName = string.Empty;
+            string destination = string.Empty;
+
             // Validation for browse
             if (string.IsNullOrWhiteSpace(LocationInput.Text) || string.IsNullOrWhiteSpace(URLTextBox.Text))
             {
                 MessageBox.Show("Please select a destination folder or enter valid url.");
                 return;
             }
-
-            string url = URLTextBox.Text.Trim();
-            string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
-            string destination = Path.Combine(LocationInput.Text,fileName);
-            Models.DownloadItem file = new Models.DownloadItem(fileName);
+            // Validation for valid url
+            try
+            {
+                url = URLTextBox.Text.Trim();
+                fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
+                destination = Path.Combine(LocationInput.Text, fileName);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            DownloadItem file = new DownloadItem(fileName);
 
             // clear the text box
             URLTextBox.Clear();
@@ -46,13 +58,13 @@ namespace FileDownloader.ParallelProcessing
 
                         var playlist = await youtube.Playlists.GetAsync(url);
                         file.FileName = playlist.Title;
-                         _ = SetVideoTitleAsync(url, downloadPanel, file);
-                         await youtubeDownloadSingleThread.DownloadPlaylist(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
+                        _ = SetVideoTitleAsync(url, downloadPanel, file);
+                        await youtubeDownloadSingleThread.DownloadPlaylist(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
                     }
                     else
                     {
-                        _ = SetVideoTitleAsync(url, downloadPanel,file);
-                         await youtubeDownloadSingleThread.DownloadVideo(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
+                        _ = SetVideoTitleAsync(url, downloadPanel, file);
+                        await youtubeDownloadSingleThread.DownloadVideo(url, LocationInput.Text, downloadPanel.progress, _cancellationTokenSource).WaitAsync(_cancellationTokenSource.Token);
 
                     }
                 }
@@ -167,7 +179,7 @@ namespace FileDownloader.ParallelProcessing
             }
         }
 
-        public async Task SetVideoTitleAsync(string url, Downloadpanel downloadPanel,Models.DownloadItem file)
+        public async Task SetVideoTitleAsync(string url, Downloadpanel downloadPanel, Models.DownloadItem file)
         {
             var youtubeClient = new YoutubeClient();
 
@@ -180,6 +192,5 @@ namespace FileDownloader.ParallelProcessing
             file.FileName = videoTitle;
 
         }
-
     }
 }

@@ -21,15 +21,26 @@ namespace FileDownloader.ParallelProcessing
         private async void DownloadButton_Click(object sender, EventArgs e)
         {
             if (IsEmptyInput(LocationInput.Text, URLTextBox.Text)) { return; }
+            string url = string.Empty;
+            string fileName = string.Empty;
+            string destination = string.Empty;
+            string fileDownload = string.Empty;
+            try
+            {
+                url = URLTextBox.Text.Trim();
+                fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
+                destination = Path.Combine(LocationInput.Text);
 
-            string url = URLTextBox.Text.Trim();
-            string fileName = Path.GetFileName(new Uri(URLTextBox.Text).LocalPath);
-            string destination = Path.Combine(LocationInput.Text);
 
+                fileDownload = Path.Combine(LocationInput.Text, fileName);
 
-            string fileDownload = Path.Combine(LocationInput.Text, fileName);
-
-            fileDownload = CheckfileNamePostFix(fileName, destination, fileDownload);
+                fileDownload = CheckfileNamePostFix(fileName, destination, fileDownload);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             // clear the text box
             URLTextBox.Clear();
